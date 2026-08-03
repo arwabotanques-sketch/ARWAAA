@@ -191,4 +191,132 @@ export async function sendAccountLockedEmail(user, { unlockAt }) {
             <p style="margin-top:20px;">If this wasn't you, we'd recommend resetting your password once it unlocks. If it was you, just wait for the lock to lift or reset your password now to skip the wait.</p>
         `),
     });
+}       
+// Notifies admin when a product's stock hits zero after an order.
+export async function sendAdminOutOfStockEmail(product) {
+    await safeSend({
+        to: process.env.EMAIL_USER || process.env.EMAIL_FROM,
+        subject: `Out of Stock — ${product.name}`,
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">Product out of stock</h2>
+            <p><strong>${product.name}</strong> has just sold out and is now at <strong>0</strong> units.</p>
+            <p style="margin-top:16px;">Restock this product as soon as possible to avoid missing sales.</p>
+        `),
+    });
+}
+
+// Admin notification when someone subscribes to the newsletter.
+export async function sendAdminNewsletterSubscriberEmail(email) {
+    await safeSend({
+        to: process.env.EMAIL_USER || process.env.EMAIL_FROM,
+        subject: "New Newsletter Subscriber",
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">New newsletter subscriber</h2>
+            <p><strong>${email}</strong> just subscribed to the Arwa Botaniqs newsletter.</p>
+        `),
+    });
+}
+
+// Sent to the customer when a payment attempt fails/is declined.
+export async function sendPaymentFailedEmail(order, { reason } = {}) {
+    await safeSend({
+        to: order.customer_email,
+        subject: `Payment Failed — Order ${order.order_number}`,
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">Payment could not be completed</h2>
+            <p>Hi ${order.customer_name}, unfortunately your payment for order <strong>${order.order_number}</strong> could not be processed${reason ? ` (${reason})` : ""}.</p>
+            <p style="margin-top:16px;">You can try again, or choose Cash on Delivery instead.</p>
+        `),
+    });
+}
+
+// Admin notification when a payment attempt fails — separate from the customer-facing one.
+export async function sendAdminFailedPaymentEmail(order, detail) {
+    await safeSend({
+        to: process.env.EMAIL_USER || process.env.EMAIL_FROM,
+        subject: `Payment Failed — Order ${order.order_number}`,
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">A customer payment failed</h2>
+            <p>Order <strong>${order.order_number}</strong> (${order.customer_name}, ${order.customer_email}) had a failed payment.</p>
+            <p>Detail: ${detail}</p>
+        `),
+    });
+}
+
+// Admin notification when a refund is issued — pairs with the customer-facing sendRefundEmail.
+export async function sendAdminRefundIssuedEmail(order, reason) {
+    await safeSend({
+        to: process.env.EMAIL_USER || process.env.EMAIL_FROM,
+        subject: `Refund Issued — Order ${order.order_number}`,
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">Refund issued</h2>
+            <p>Order <strong>${order.order_number}</strong> (${order.customer_name}, ${order.customer_email}) was refunded${reason ? ` — reason: ${reason}` : ""}.</p>
+            <p><strong>Amount: Rs. ${Number(order.total).toLocaleString()}</strong></p>
+        `),
+    });
+}
+// Sent to the customer when a payment succeeds — used for Stripe, JazzCash, and Easypaisa alike.
+export async function sendPaymentSuccessfulEmail(order, { paymentId, amount, method }) {
+    await safeSend({
+        to: order.customer_email,
+        subject: `Payment Received — Order ${order.order_number}`,
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">Payment received, thank you!</h2>
+            <p>Hi ${order.customer_name}, we've received your payment for order <strong>${order.order_number}</strong>.</p>
+            <p><strong>Amount: Rs. ${Number(amount).toLocaleString()}</strong></p>
+            <p>Payment method: ${method}</p>
+            <p style="color:#777; font-size:12px;">Transaction reference: ${paymentId}</p>
+            <a href="${FRONTEND_URL}/track/${order.id}" style="display:inline-block; margin-top:16px; padding:12px 28px; background:${BRAND_GREEN}; color:${BRAND_GOLD}; text-decoration:none; letter-spacing:1px;">TRACK ORDER</a>
+        `),
+    });
+}
+// Notifies the admin inbox whenever a new order comes in.
+export async function sendAdminNewOrderEmail(order, items) {
+    const itemRows = items.map(i =>
+        `<tr>
+            <td style="padding:8px 0; border-bottom:1px solid #eee;">${i.product_name} × ${i.quantity}</td>
+            <td style="padding:8px 0; border-bottom:1px solid #eee; text-align:right;">Rs. ${Number(i.subtotal).toLocaleString()}</td>
+        </tr>`
+    ).join("");
+
+    await safeSend({
+        to: process.env.EMAIL_USER || process.env.EMAIL_FROM,
+        subject: `New Order Received — ${order.order_number}`,
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">New order placed</h2>
+            <p><strong>${order.customer_name}</strong> (${order.customer_email}) just placed an order.</p>
+            <table style="width:100%; border-collapse:collapse; margin:20px 0;">${itemRows}</table>
+            <p><strong>Total: Rs. ${Number(order.total).toLocaleString()}</strong></p>
+            <p>Payment method: ${order.payment_method || "N/A"}</p>
+            <p style="margin-top:20px;">Shipping to:<br>${order.shipping_address}, ${order.shipping_city}, ${order.shipping_province}</p>
+        `),
+    });
+}
+
+// Notifies admin when a product's stock drops to a low level after an order.
+export async function sendAdminLowStockEmail(product) {
+    await safeSend({
+        to: process.env.EMAIL_USER || process.env.EMAIL_FROM,
+        subject: `Low Stock Warning — ${product.name}`,
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">Low stock warning</h2>
+            <p><strong>${product.name}</strong> is running low — only <strong>${product.stock}</strong> units left.</p>
+            <p style="margin-top:16px;">Consider restocking soon.</p>
+        `),
+    });
+}
+
+// Notifies admin whenever a new customer registers.
+export async function sendAdminNewCustomerEmail(user) {
+    await safeSend({
+        to: process.env.EMAIL_USER || process.env.EMAIL_FROM,
+        subject: `New Customer Registered — ${user.first_name} ${user.last_name}`,
+        html: wrapper(`
+            <h2 style="color:${BRAND_GREEN};">New customer account created</h2>
+            <p><strong>${user.first_name} ${user.last_name}</strong> just created an account.</p>
+            <p>Email: ${user.email}</p>
+            ${user.phone ? `<p>Phone: ${user.phone}</p>` : ""}
+            <p style="color:#777; font-size:13px; margin-top:16px;">Account is pending email verification.</p>
+        `),
+    });
 }
