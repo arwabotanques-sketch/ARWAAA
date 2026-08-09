@@ -725,34 +725,30 @@ export default function Root() {
 
       {!hideFooter && <Footer />}
 
-      {/* Floating buttons */}
+ {/* Floating buttons */}
       <a href="https://wa.me/923049067897" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
-        className="fixed bottom-20 right-5 z-40 w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-20 right-5 z-[55] w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
         style={{ backgroundColor: "#25D366", animation: "waPulse 2.5s ease-in-out infinite" }}>
         <MessageCircle size={22} color="white" fill="white" />
       </a>
 
       {/* AI floating button (Phase D) */}
       <button onClick={() => navigate("/ai")} aria-label="AI Assistant"
-        className="fixed bottom-36 right-5 z-40 w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+        className="fixed bottom-36 right-5 z-[55] w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
         style={{ backgroundColor: C.green, border: `2px solid ${C.gold}` }}>
         <Bot size={20} color={C.gold} />
       </button>
 
       {/* Skin quiz floating button */}
       <button onClick={() => navigate("/quiz")} aria-label="Skin Quiz"
-        className="fixed bottom-52 right-5 z-40 w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+        className="fixed bottom-52 right-5 z-[55] w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
         style={{ backgroundColor: C.gold }}>
         <Zap size={20} color={C.green} />
       </button>
 
       {scrollY > 500 && (
-        <button onClick={() => {
-            const lenis = (window as any).__lenis;
-            if (lenis) lenis.scrollTo(0, { duration: 1.2 });
-            else window.scrollTo({ top: 0, behavior: "smooth" });
-          }} aria-label="Back to top"
-          className="fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform"
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Back to top"
+          className="fixed bottom-5 right-5 z-[55] w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform"
           style={{ backgroundColor: C.green }}>
           <ChevronDown size={17} color={C.gold} style={{ transform: "rotate(180deg)" }} />
         </button>
