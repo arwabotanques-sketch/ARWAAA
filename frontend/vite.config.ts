@@ -5,6 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 function figmaAssetResolver() {
@@ -26,6 +29,7 @@ export default defineConfig({
     // Tailwind is not being actively used – do not remove them
     react(),
     tailwindcss(),
+    cloudflare()
   ],
   resolve: {
     alias: {
