@@ -14,7 +14,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // customers. Once you verify your own domain in Resend (Domains tab, add
 // the DNS records they give you), change this to something like
 // "ARWA Botaniqs <noreply@arwaa.pk>" and every recipient will work.
-const SEND_FROM = "ARWA Botaniqs <onboarding@resend.dev>";
+const SEND_FROM = "ARWA Botaniqs <noreply@arwabotanics.com>";
 
 const BRAND_GREEN = "#1a3d2b";
 const BRAND_GOLD = "#c9a84c";
