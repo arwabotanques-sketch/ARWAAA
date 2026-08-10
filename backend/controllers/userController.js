@@ -15,8 +15,8 @@ import { verifyFacebookAccessToken, isConfigured as facebookConfigured } from ".
 
 const COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: false,     // set to true once you deploy with HTTPS
-    sameSite: "lax",
+    secure: true,   // set to true once you deploy with HTTPS
+    sameSite: "none",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
