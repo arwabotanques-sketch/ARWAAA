@@ -37,7 +37,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 // Comma-separated list in production (e.g. "https://arwaa.pk,https://www.arwaa.pk"),
 // falls back to localhost for local dev.
-const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
+const allowedOrigins = (process.env.FRONTEND_URL || ""https://arwaa.arwabotanques.workers.dev"")
   .split(",")
   .map(o => o.trim());
 
