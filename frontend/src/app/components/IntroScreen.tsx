@@ -192,6 +192,7 @@ export default function IntroScreen({ onComplete }: IntroProps) {
             position: "fixed",
             inset: 0,
             zIndex: 9999,
+            pointerEvents: exiting ? "none" : "auto",
             backgroundColor: "#071410",
             display: "flex",
             flexDirection: "column",

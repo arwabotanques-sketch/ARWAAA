@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import cloudinary from "../config/cloudinary.js";
 import stripe from "../utils/stripeClient.js";
 import * as jazzcash from "../utils/jazzcashClient.js";
 import * as easypaisa from "../utils/easypaisaClient.js";
@@ -226,8 +227,13 @@ export const getPaymentConfig = async (req, res) => {
         success: true,
         gateways: {
             stripe: Boolean(process.env.STRIPE_SECRET_KEY),
-            jazzcash: jazzcash.isConfigured(),
-            easypaisa: easypaisa.isConfigured(),
+            // JazzCash/Easypaisa now run in manual-verification mode (customer sends
+            // payment + uploads a screenshot, admin approves) instead of needing real
+            // merchant API credentials — always available regardless of jazzcash/
+            // easypaisa.isConfigured(), which stays unused unless real API access
+            // is set up later.
+            jazzcash: true,
+            easypaisa: true,
             cod: true,
         },
     });
@@ -508,5 +514,98 @@ export const easypaisaCallback = async (req, res) => {
     } catch (error) {
         console.error("Easypaisa callback handling failed:", error.message);
         return res.redirect(`${FRONTEND_URL}/order-cancel`);
+    }
+};
+// ==========================================
+// MANUAL PAYMENT VERIFICATION (JazzCash / Easypaisa)
+// ==========================================
+// Customer sends money to our JazzCash/Easypaisa number directly, then uploads
+// a screenshot + reference here. Order sits as 'pending_verification' until an
+// admin reviews the screenshot and approves or rejects it below.
+export const submitManualPaymentProof = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reference } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "Please upload a screenshot of your payment." });
+        }
+
+        const orderResult = await pool.query("SELECT * FROM orders WHERE id = $1", [id]);
+        const order = orderResult.rows[0];
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found." });
+        }
+        if (!["jazzcash", "easypaisa"].includes(order.payment_method)) {
+            return res.status(400).json({ success: false, message: "This order isn't set up for manual payment verification." });
+        }
+
+        const uploadResult = await cloudinary.uploader.upload(req.file.path, { folder: "arwa-payment-proofs" });
+
+        await pool.query(
+            `UPDATE orders SET payment_proof_url = $1, payment_reference = $2, payment_status = 'pending_verification' WHERE id = $3`,
+            [uploadResult.secure_url, reference || null, id]
+        );
+
+        createNotification({
+            userId: null,
+            title: "Payment proof submitted",
+            message: `${order.customer_name} submitted a ${order.payment_method === "jazzcash" ? "JazzCash" : "Easypaisa"} payment screenshot for order ${order.order_number}. Please verify.`,
+            type: "admin_order",
+            link: "/admin/orders",
+        });
+
+        res.status(200).json({ success: true, message: "Payment proof submitted. We'll verify and confirm your order shortly." });
+    } catch (error) {
+        console.error("submitManualPaymentProof failed:", error.message);
+        res.status(500).json({ success: false, message: "Couldn't submit payment proof. Please try again." });
+    }
+};
+
+// Admin approves or rejects a manually-submitted JazzCash/Easypaisa payment.
+// Reuses recordPaymentAndFinalize() — the same helper the real JazzCash/Stripe
+// webhooks use — so stock deduction, emails, and notifications stay identical
+// to every other payment path instead of duplicating that logic here.
+export const verifyManualPayment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { approve } = req.body;
+
+        const orderResult = await pool.query("SELECT * FROM orders WHERE id = $1", [id]);
+        const order = orderResult.rows[0];
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found." });
+        }
+
+        if (approve) {
+            const { order: finalizedOrder, alreadyProcessed } = await recordPaymentAndFinalize({
+                orderId: order.id,
+                provider: order.payment_method,
+                transactionId: order.payment_reference || `manual-${order.id}`,
+                rawPayload: { proof_url: order.payment_proof_url, verified_by_admin: true },
+            });
+            if (!alreadyProcessed && finalizedOrder) {
+                sendPaymentSuccessfulEmail(finalizedOrder, {
+                    paymentId: order.payment_reference || "manual",
+                    amount: finalizedOrder.total,
+                    method: order.payment_method === "jazzcash" ? "JazzCash" : "Easypaisa",
+                });
+            }
+            return res.status(200).json({ success: true, message: "Payment approved and order confirmed." });
+        } else {
+            await pool.query(
+                `UPDATE orders SET payment_status = 'failed', order_status = 'cancelled' WHERE id = $1`,
+                [id]
+            );
+            sendPaymentFailedEmail(order, { reason: "payment could not be verified" });
+            return res.status(200).json({ success: true, message: "Payment rejected. Customer has been notified." });
+        }
+    } catch (error) {
+        if (error instanceof InsufficientStockError) {
+            await pool.query(`UPDATE orders SET payment_status = 'paid', order_status = 'cancelled' WHERE id = $1`, [req.params.id]);
+            return res.status(409).json({ success: false, message: `Approved, but ${error.productName} sold out — order cancelled, please refund manually and inform the customer.` });
+        }
+        console.error("verifyManualPayment failed:", error.message);
+        res.status(500).json({ success: false, message: "Couldn't process verification." });
     }
 };

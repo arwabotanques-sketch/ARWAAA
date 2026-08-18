@@ -163,13 +163,13 @@ export function BrandLogo({ light = false, compact = false }: { light?: boolean;
   const markSz = compact ? 26 : 32;
   return (
     <div className="flex items-center gap-2 select-none" style={{ cursor: "pointer" }}>
-      <div style={{ position: "relative", width: markSz + 6, height: markSz }}>
-        <span style={{ fontFamily: serif, fontSize: markSz, fontWeight: 700, color: C.gold, lineHeight: 1, letterSpacing: "-1.5px" }}>AB</span>
-        <svg width={9} height={13} viewBox="0 0 9 13" style={{ position: "absolute", top: 5, left: "46%", transform: "translateX(-50%)" }} aria-hidden>
+      <div style={{ position: "relative", width: markSz + 6, height: markSz + 8 }}>
+        <svg width={9} height={11} viewBox="0 0 9 13" style={{ position: "absolute", top: -7, left: "50%", transform: "translateX(-50%)" }} aria-hidden>
           <path d="M4.5 0 Q6 4 4.5 8 Q3 11 4.5 13" stroke={C.gold} strokeWidth=".9" fill="none" opacity=".9" />
           <path d="M4.5 3 Q7 2 7.5 4 Q5.5 4.8 4.5 4" fill={C.gold} />
           <path d="M4.5 3 Q2 2 1.5 4 Q3.5 4.8 4.5 4" fill={C.gold} />
         </svg>
+        <span style={{ position: "absolute", top: 6, left: 0, fontFamily: serif, fontSize: markSz, fontWeight: 700, color: C.gold, lineHeight: 1, letterSpacing: "-1.5px" }}>AB</span>
       </div>
       <div>
         <div style={{ fontFamily: serif, fontSize: compact ? 13 : 16, fontWeight: 700, color: nameC, letterSpacing: "0.18em", lineHeight: 1.05 }}>ARWA</div>

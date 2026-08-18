@@ -138,7 +138,7 @@ export default function DashboardLayout() {
   );
 
   return (
-    <div className="flex min-h-screen pt-10 sm:pt-16" style={{ backgroundColor: C.ivory }}>
+    <div className="flex min-h-screen pt-24" style={{ backgroundColor: C.ivory }}>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-60 fixed left-0 top-10 sm:top-16 bottom-0 z-30" style={{ backgroundColor: C.green, borderRight: `1px solid rgba(201,168,76,0.15)` }}>
         <SidebarContent />

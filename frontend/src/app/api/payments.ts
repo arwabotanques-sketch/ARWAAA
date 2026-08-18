@@ -36,6 +36,15 @@ export async function createEasypaisaCheckout(orderId: string): Promise<GatewayC
   });
 }
 
+// Uploads a JazzCash/Easypaisa payment screenshot + the reference/transaction ID
+// the customer typed in, right after the order is created.
+export async function submitPaymentProof(orderId: string, file: File, reference: string): Promise<void> {
+  const fd = new FormData();
+  fd.append("proof", file);
+  fd.append("reference", reference);
+  await apiFetch(`/orders/${orderId}/payment-proof`, { method: "POST", body: fd });
+}
+
 export interface PaymentGatewayConfig {
   stripe: boolean;
   jazzcash: boolean;

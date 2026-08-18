@@ -46,7 +46,7 @@ function Viewer360({ image, onClose }: { image: { src: string; alt: string }; on
         </button>
         <div
           className="relative select-none flex items-center justify-center"
-          style={{ width: 320, height: 400, perspective: 900, cursor: dragging ? "grabbing" : "grab" }}
+          style={{ width: "min(320px, 80vw)", height: "min(400px, 62vh)", perspective: 900, cursor: dragging ? "grabbing" : "grab" }}
           onMouseDown={e => onDown(e.clientX)}
           onMouseMove={e => onMove(e.clientX)}
           onMouseUp={onUp}
@@ -131,7 +131,7 @@ function ImageGallery({ product }: { product: Product }) {
       {/* Main image */}
       <div className="relative overflow-hidden group cursor-zoom-in" style={{ aspectRatio: "4/5", backgroundColor: "#eee8da" }}
         onClick={() => setLightbox(true)}>
-        <ImageWithFallback src={GALLERY_IMAGES[active].src} alt={GALLERY_IMAGES[active].alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+        <ImageWithFallback src={GALLERY_IMAGES[active].src} alt={GALLERY_IMAGES[active].alt} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: "rgba(26,61,43,0.2)" }}>
           <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(245,240,232,0.9)" }}>
             <ZoomIn size={18} color={C.green} />
@@ -146,7 +146,7 @@ function ImageGallery({ product }: { product: Product }) {
       </div>
 
       {/* Thumbnails */}
-      <div className="flex gap-3 mt-3">
+      <div className="flex gap-3 mt-3 overflow-x-auto">
         {GALLERY_IMAGES.map((img, i) => (
           <button key={i} onClick={() => setActive(i)}
             className="w-16 h-16 overflow-hidden flex-shrink-0 transition-all duration-200"
@@ -465,7 +465,7 @@ function StickyBar({ product, visible, onAddToCart }: { product: Product; visibl
     <AnimatePresence>
       {visible && (
         <motion.div initial={{ y: -80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -80, opacity: 0 }}
-          className="fixed top-0 left-0 right-0 z-[55] px-4 py-3"
+          className="fixed top-16 left-0 right-0 z-[55] px-4 py-3"
           style={{ backgroundColor: C.green, boxShadow: "0 2px 20px rgba(0,0,0,0.15)" }}>
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div>
@@ -526,7 +526,6 @@ export default function ProductDetail() {
 
   return (
     <div style={{ backgroundColor: C.ivory, minHeight: "100vh" }}>
-      <StickyBar product={product} visible={stickyVisible} onAddToCart={handleAddToCart} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
         {/* Breadcrumb */}
@@ -553,77 +552,79 @@ export default function ProductDetail() {
 
           {/* Info */}
           <FadeIn delay={0.12}>
-            <div>
+            <div className="min-w-0">
               {/* Badges */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {product.isBestSeller && <span className="px-2.5 py-1 text-[11px] uppercase tracking-wider" style={{ backgroundColor: C.green, color: C.ivory, fontFamily: "'DM Sans',sans-serif" }}>Best Seller</span>}
-                {product.isFeatured  && <span className="px-2.5 py-1 text-[11px] uppercase tracking-wider" style={{ backgroundColor: "rgba(201,168,76,0.15)", color: C.gold, fontFamily: "'DM Sans',sans-serif" }}>Featured</span>}
-                <span className="px-2.5 py-1 text-[11px] uppercase tracking-wider" style={{ color: product.stock > 0 ? "#2d8a4e" : "#d4183d", backgroundColor: product.stock > 0 ? "rgba(45,138,78,0.1)" : "rgba(212,24,61,0.1)", fontFamily: "'DM Sans',sans-serif" }}>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+                {product.isBestSeller && <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[11px] uppercase tracking-wider" style={{ backgroundColor: C.green, color: C.ivory, fontFamily: "'DM Sans',sans-serif" }}>Best Seller</span>}
+                {product.isFeatured  && <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[11px] uppercase tracking-wider" style={{ backgroundColor: "rgba(201,168,76,0.15)", color: C.gold, fontFamily: "'DM Sans',sans-serif" }}>Featured</span>}
+                <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[11px] uppercase tracking-wider" style={{ color: product.stock > 0 ? "#2d8a4e" : "#d4183d", backgroundColor: product.stock > 0 ? "rgba(45,138,78,0.1)" : "rgba(212,24,61,0.1)", fontFamily: "'DM Sans',sans-serif" }}>
                   {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
                 </span>
               </div>
 
-              <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: "clamp(2rem,4vw,2.8rem)", fontWeight: 700, color: C.green, lineHeight: 1.15 }}>
+              <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: "clamp(1.4rem,5vw,2.8rem)", fontWeight: 700, color: C.green, lineHeight: 1.15 }}>
                 {product.name}<br /><span style={{ fontStyle: "italic", color: C.olive }}>{product.subtitle}</span>
               </h1>
-              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.84rem", color: C.muted, marginTop: 6, letterSpacing: "0.06em" }}>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.74rem", color: C.muted, marginTop: 4, letterSpacing: "0.06em" }} className="sm:text-[0.84rem] sm:mt-1.5">
                 {product.tagline} · {product.weight}
               </p>
 
               {/* Rating */}
-              <div className="flex items-center gap-2 mt-3 mb-5">
+              <div className="flex items-center gap-2 mt-2 mb-3 sm:mt-3 sm:mb-5">
                 <StarRating rating={product.rating} />
-                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: C.muted }}>({product.reviewCount} reviews)</span>
+                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.74rem", color: C.muted }} className="sm:text-[0.82rem]">({product.reviewCount} reviews)</span>
               </div>
 
               {/* Price */}
-              <div className="flex items-baseline gap-4 mb-6 pb-6" style={{ borderBottom: `1px solid rgba(26,61,43,0.1)` }}>
-                <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "2.6rem", fontWeight: 700, color: C.green }}>Rs. {product.price.toLocaleString()}</span>
-                <span className="line-through" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "1.2rem", color: "#aabba9" }}>Rs. {product.oldPrice.toLocaleString()}</span>
-                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.8rem", fontWeight: 600, backgroundColor: C.gold, color: C.green, padding: "3px 10px" }}>
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 sm:gap-x-4 sm:gap-y-2 mb-4 pb-4 sm:mb-6 sm:pb-6" style={{ borderBottom: `1px solid rgba(26,61,43,0.1)` }}>
+                <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "1.7rem", fontWeight: 700, color: C.green }} className="sm:text-[2.6rem]">Rs. {product.price.toLocaleString()}</span>
+                <span className="line-through sm:text-[1.2rem]" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.9rem", color: "#aabba9" }}>Rs. {product.oldPrice.toLocaleString()}</span>
+                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.7rem", fontWeight: 600, backgroundColor: C.gold, color: C.green, padding: "2px 8px" }} className="sm:text-[0.8rem] sm:py-[3px] sm:px-[10px]">
                   {product.discount}% OFF
                 </span>
               </div>
 
               {/* Short description */}
-              <p style={{ fontFamily: "'DM Sans',sans-serif", color: "#4a5a4a", lineHeight: 1.82, fontSize: "0.92rem", marginBottom: 20 }}>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", color: "#4a5a4a", lineHeight: 1.7, fontSize: "0.82rem", marginBottom: 14 }} className="sm:leading-[1.82] sm:text-[0.92rem] sm:mb-5">
                 {product.description.slice(0, 180)}...
               </p>
 
               {/* Benefits chips */}
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-6">
                 {product.benefits.map(b => (
-                  <span key={b} className="px-3 py-1 text-xs" style={{ backgroundColor: "rgba(201,168,76,0.1)", color: C.olive, fontFamily: "'DM Sans',sans-serif", border: `1px solid rgba(201,168,76,0.2)` }}>{b}</span>
+                  <span key={b} className="px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs" style={{ backgroundColor: "rgba(201,168,76,0.1)", color: C.olive, fontFamily: "'DM Sans',sans-serif", border: `1px solid rgba(201,168,76,0.2)` }}>{b}</span>
                 ))}
               </div>
 
               {/* Skin types */}
-              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.8rem", color: C.muted, marginBottom: 16 }}>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: C.muted, marginBottom: 12 }} className="sm:text-[0.8rem] sm:mb-4">
                 <span style={{ color: C.green, fontWeight: 600 }}>Suitable for: </span>{product.skinTypes.join(", ")} skin types
               </p>
 
               {/* Quantity */}
-              <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
                 <div className="flex items-center border" style={{ borderColor: "rgba(26,61,43,0.3)" }}>
-                  <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-black/5 transition-colors text-xl" style={{ color: C.green }}>−</button>
-                  <span className="w-10 text-center" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.9rem", color: C.green, fontWeight: 600 }}>{qty}</span>
-                  <button onClick={() => setQty(q => q + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-black/5 transition-colors text-xl" style={{ color: C.green }}>+</button>
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-black/5 transition-colors text-base sm:text-xl" style={{ color: C.green }}>−</button>
+                  <span className="w-8 sm:w-10 text-center" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: C.green, fontWeight: 600 }}>{qty}</span>
+                  <button onClick={() => setQty(q => q + 1)} className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-black/5 transition-colors text-base sm:text-xl" style={{ color: C.green }}>+</button>
                 </div>
-                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.8rem", color: C.muted }}>Total: <strong style={{ color: C.green }}>Rs. {(product.price * qty).toLocaleString()}</strong></p>
+                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: C.muted }} className="sm:text-[0.8rem]">Total: <strong style={{ color: C.green }}>Rs. {(product.price * qty).toLocaleString()}</strong></p>
               </div>
 
               {/* CTA row */}
-              <div ref={ctaRef} className="flex flex-col sm:flex-row gap-3 mb-5">
+              <div ref={ctaRef} className="flex flex-row gap-2 sm:gap-3 mb-4 sm:mb-5">
                 <button onClick={() => { addToCart(product, qty); navigate("/checkout"); }}
-                  className="group flex-1 py-4 text-sm font-medium relative overflow-hidden"
-                  style={{ backgroundColor: C.green, color: C.ivory, fontFamily: "'DM Sans',sans-serif", letterSpacing: "0.16em", textTransform: "uppercase" }}>
-                  <span className="relative z-10">Buy Now</span>
-                  <span className="absolute inset-0 translate-x-full group-hover:translate-x-0 transition-transform duration-300" style={{ backgroundColor: C.gold }} />
-                  <span className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ color: C.green }}>Buy Now</span>
+                  className="group flex-1 py-3 sm:py-4 text-xs sm:text-sm font-medium relative overflow-hidden"
+                  style={{ backgroundColor: C.green, fontFamily: "'DM Sans',sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  <span className="absolute inset-0 translate-x-full group-hover:translate-x-0 transition-transform duration-300 z-0" style={{ backgroundColor: C.gold }} />
+                  <span className="relative z-10 block group-hover:opacity-0 transition-opacity duration-300" style={{ color: C.ivory }}>Buy Now</span>
+                  <span className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ color: C.green }}>Buy Now</span>
                 </button>
-                <button onClick={handleAddToCart} className="flex-1 py-4 text-sm font-medium border flex items-center justify-center gap-2 hover:bg-[rgba(26,61,43,0.05)] transition-colors"
-                  style={{ borderColor: C.green, color: C.green, fontFamily: "'DM Sans',sans-serif", letterSpacing: "0.16em", textTransform: "uppercase" }}>
-                  <ShoppingCart size={15} /> Add to Cart
+                <button onClick={handleAddToCart} className="flex-1 py-3 sm:py-4 text-xs sm:text-sm font-medium border flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-[rgba(26,61,43,0.05)] transition-colors"
+                  style={{ borderColor: C.green, color: C.green, fontFamily: "'DM Sans',sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  <ShoppingCart size={13} className="sm:hidden" /> <ShoppingCart size={15} className="hidden sm:block" />
+                  <span className="hidden xs:inline sm:inline">Add to Cart</span>
+                  <span className="xs:hidden sm:hidden">Add</span>
                 </button>
               </div>
 

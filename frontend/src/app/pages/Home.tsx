@@ -598,7 +598,7 @@ function BrandStory() {
           <FadeIn delay={0.2}>
             <div className="relative">
               <div style={{ aspectRatio: "1/1" }}>
-                <ParallaxImage src={logoImg} alt="Arwa Botaniqs brand identity" className="w-full h-full" />
+                <ParallaxImage src={productImg} alt="Arwa Botaniqs Beauty Soap" className="w-full h-full" />
               </div>
               <div className="absolute bottom-0 left-0 right-0 py-4 text-center" style={{ backgroundColor: "rgba(26,61,43,0.88)" }}>
                 <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", letterSpacing: "0.38em", textTransform: "uppercase", color: C.gold }}>Nature. Purity. You.</p>

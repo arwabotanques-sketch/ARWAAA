@@ -184,12 +184,21 @@ function Navbar({ scrollY, navTop, hidden }: { scrollY: number; navTop: number; 
                 <div className="w-8 h-8" />
               ) : isAuthenticated && user ? (
                 <div className="relative">
-                  <button onClick={() => setUserMenu(!userMenu)} className="flex items-center gap-2 p-1 hover:opacity-80 transition-opacity" aria-label="Account">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
-                      style={{ backgroundColor: C.gold, color: C.green, fontFamily: "'Playfair Display',serif" }}>
-                      {user.name[0]}
-                    </div>
-                  </button>
+                <button onClick={() => setUserMenu(!userMenu)} className="flex items-center gap-2 p-1 hover:opacity-80 transition-opacity" aria-label="Account">
+  {user.profilePicture ? (
+    <img
+      src={user.profilePicture}
+      alt={user.name}
+      className="w-8 h-8 rounded-full object-cover flex-shrink-0 block"
+      style={{ objectPosition: "center" }}
+    />
+  ) : (
+    <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
+      style={{ backgroundColor: C.gold, color: C.green, fontFamily: "'Playfair Display',serif" }}>
+      {user.name[0]}
+    </div>
+  )}
+</button>
                   <AnimatePresence>
                     {userMenu && (
                       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
@@ -581,7 +590,7 @@ function Footer() {
               {[Instagram, Facebook].map((Icon, i) => (
                 <a key={i} href="#" aria-label="Social" className="w-9 h-9 flex items-center justify-center border transition-all hover:border-[#c9a84c]" style={{ borderColor: "rgba(201,168,76,0.18)" }}><Icon size={15} color={C.gold} /></a>
               ))}
-              <a href="https://wa.me/923049067897" target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center border transition-all hover:border-[#c9a84c]" style={{ borderColor: "rgba(201,168,76,0.18)" }}><MessageCircle size={15} color={C.gold} /></a>
+              <a href="https://wa.me/923714537622" target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center border transition-all hover:border-[#c9a84c]" style={{ borderColor: "rgba(201,168,76,0.18)" }}><MessageCircle size={15} color={C.gold} /></a>
             </div>
           </div>
           <div>
@@ -630,6 +639,7 @@ function Footer() {
 // ─── Root Layout ──────────────────────────────────────────────────────────────
 export default function Root() {
   const location = useLocation();
+  const showBannerOnThisPage = location.pathname === "/" || location.pathname.startsWith("/about");
   const navigate = useNavigate();
   const [loading,        setLoading]        = useState(true);
   const [scrollY,        setScrollY]        = useState(0);
@@ -642,12 +652,16 @@ export default function Root() {
   const scrollAccum = useRef(0);
   const scrollDir   = useRef<"up" | "down" | null>(null);
 
-  const BANNER_H = showBanner ? 40 : 0;
+  const BANNER_H = (showBanner && showBannerOnThisPage) ? 40 : 0;
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 1800); return () => clearTimeout(t); }, []);
   useEffect(() => {
     if (localStorage.getItem("arwa_newsletter_seen")) return;
     const t = setTimeout(() => setShowNewsletter(true), 10000);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    const t = setTimeout(() => setShowBanner(false), 15000);
     return () => clearTimeout(t);
   }, []);
   useEffect(() => {
@@ -697,7 +711,7 @@ export default function Root() {
   if (loading) return <PremiumLoader />;
 
   // Hide footer on auth/dashboard pages
-  const hideFooter = location.pathname.startsWith("/auth") || location.pathname.startsWith("/dashboard");
+  const hideFooter = location.pathname.startsWith("/auth") || location.pathname.startsWith("/dashboard") || location.pathname.startsWith("/ai");
 
   return (
     <SmoothScroll>
@@ -709,8 +723,8 @@ export default function Root() {
 
       {/* Flash sale banner */}
       <style>{`@keyframes arwaBannerShift { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
-      <div className="fixed top-0 left-0 right-0 z-[60]">
-        <AnimatePresence>{showBanner && <motion.div key="banner" initial={{ height: 0, opacity: 0 }} animate={{ height: 40, opacity: 1 }} exit={{ height: 0, opacity: 0 }}><FlashSaleBanner onDismiss={() => setShowBanner(false)} onExpire={() => setShowBanner(false)} /></motion.div>}</AnimatePresence>
+      <div className="fixed top-16 left-0 right-0 z-[55]" style={{ pointerEvents: showBanner ? "auto" : "none" }}>
+        <AnimatePresence>{showBanner && showBannerOnThisPage && <motion.div key="banner" initial={{ height: 0, opacity: 0 }} animate={{ height: 40, opacity: 1 }} exit={{ height: 0, opacity: 0 }}><FlashSaleBanner onDismiss={() => setShowBanner(false)} onExpire={() => setShowBanner(false)} /></motion.div>}</AnimatePresence>
       </div>
 
       <ScrollProgress y={scrollY} top={BANNER_H + 2} />
@@ -726,32 +740,52 @@ export default function Root() {
       {!hideFooter && <Footer />}
 
  {/* Floating buttons */}
-      <a href="https://wa.me/923049067897" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
-        className="fixed bottom-20 right-5 z-[55] w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
-        style={{ backgroundColor: "#25D366", animation: "waPulse 2.5s ease-in-out infinite" }}>
-        <MessageCircle size={22} color="white" fill="white" />
-      </a>
+      <style>{`
+        @keyframes waRing { 0% { box-shadow: 0 0 0 0 rgba(37,211,102,0.45); } 100% { box-shadow: 0 0 0 16px rgba(37,211,102,0); } }
+        @keyframes aiFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+      `}</style>
 
-      {/* AI floating button (Phase D) */}
-      <button onClick={() => navigate("/ai")} aria-label="AI Assistant"
-        className="fixed bottom-36 right-5 z-[55] w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
-        style={{ backgroundColor: C.green, border: `2px solid ${C.gold}` }}>
-        <Bot size={20} color={C.gold} />
-      </button>
+      {/* WhatsApp — bottom right, gradient + soft pulse ring, smaller on mobile */}
+      <motion.a
+        href="https://wa.me/923714537622" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp"
+        initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: "spring" }}
+        whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-5 z-[55] w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
+        style={{
+          background: "linear-gradient(145deg, #29d967, #1fa851)",
+          boxShadow: "0 4px 14px rgba(0,0,0,0.22)",
+          animation: "waRing 2.2s ease-out infinite",
+        }}>
+        <MessageCircle size={18} className="sm:hidden" color="white" fill="white" />
+        <MessageCircle size={24} className="hidden sm:block" color="white" fill="white" />
+      </motion.a>
 
-      {/* Skin quiz floating button */}
-      <button onClick={() => navigate("/quiz")} aria-label="Skin Quiz"
-        className="fixed bottom-52 right-5 z-[55] w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
-        style={{ backgroundColor: C.gold }}>
-        <Zap size={20} color={C.green} />
-      </button>
+      {/* AI Assistant — bottom LEFT, gold-on-green with gentle float, smaller on mobile */}
+      <motion.button
+        onClick={() => navigate("/ai")} aria-label="AI Assistant"
+        initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.5, type: "spring" }}
+        whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+        className="fixed bottom-4 left-4 sm:bottom-6 sm:left-5 z-[55] w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
+        style={{
+          background: `linear-gradient(145deg, ${C.green}, #123726)`,
+          border: `1.5px solid ${C.gold}`,
+          boxShadow: "0 4px 14px rgba(0,0,0,0.22)",
+          animation: "aiFloat 3s ease-in-out infinite",
+        }}>
+        <Bot size={17} className="sm:hidden" color={C.gold} />
+        <Bot size={22} className="hidden sm:block" color={C.gold} />
+      </motion.button>
 
       {scrollY > 500 && (
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Back to top"
-          className="fixed bottom-5 right-5 z-[55] w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform"
-          style={{ backgroundColor: C.green }}>
-          <ChevronDown size={17} color={C.gold} style={{ transform: "rotate(180deg)" }} />
-        </button>
+        <motion.button
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Back to top"
+          whileHover={{ scale: 1.1 }}
+          className="fixed bottom-[72px] right-4 sm:bottom-24 sm:right-5 z-[55] w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: C.green, boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
+          <ChevronDown size={14} className="sm:hidden" color={C.gold} style={{ transform: "rotate(180deg)" }} />
+          <ChevronDown size={17} className="hidden sm:block" color={C.gold} style={{ transform: "rotate(180deg)" }} />
+        </motion.button>
       )}
 
       <CartDrawer />

@@ -1,7 +1,7 @@
 import { fetchAdminCustomers, type AdminCustomer as AdminCustomerType } from "../api/customers";
 import {
   fetchOrders, fetchOrderDetail, updateOrderStatus as updateOrderStatusApi,
-  updateOrderNotes as updateOrderNotesApi, type AdminOrder as AdminOrderType,
+  updateOrderNotes as updateOrderNotesApi, verifyManualPayment, type AdminOrder as AdminOrderType,
   type OrderItem as OrderItemType, type OrderTimelineEntry as OrderTimelineType,
 } from "../api/orders";
 import {
@@ -1070,6 +1070,22 @@ export function AdminOrders() {
   const [detailTimeline, setDetailTimeline] = useState<OrderTimelineType[]>([]);
   const [adminNote, setAdminNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  const handleVerifyPayment = async (approve: boolean) => {
+    if (!detail) return;
+    setVerifying(true);
+    try {
+      const updated = await verifyManualPayment(detail.id, approve);
+      setOrders(os => os.map(o => o.id === detail.id ? updated : o));
+      setDetail(updated);
+      toast.success(approve ? "Payment approved — order confirmed!" : "Payment rejected — order cancelled.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to process verification");
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   const loadOrders = async () => {
     setLoading(true);
@@ -1181,9 +1197,12 @@ export function AdminOrders() {
                     <span style={{ fontFamily: F.sans, fontSize: "0.8rem", color: A.muted }}>{o.payment}</span>
                     <span style={{
                       fontFamily: F.sans, fontSize: "0.68rem", marginLeft: 6, padding: "1px 6px",
-                      color: o.paymentStatus === "paid" ? A.green2 : o.paymentStatus === "refunded" ? A.gold : o.paymentStatus === "failed" ? A.red : A.muted,
+                      color: o.paymentStatus === "paid" ? A.green2 : o.paymentStatus === "refunded" ? A.gold : o.paymentStatus === "failed" ? A.red : o.paymentStatus === "pending_verification" ? A.gold : A.muted,
                       border: `1px solid ${A.border}`, textTransform: "capitalize",
-                    }}>{o.paymentStatus}</span>
+                    }}>{o.paymentStatus === "pending_verification" ? "Needs Review" : o.paymentStatus}</span>
+                    {o.paymentProofUrl && o.paymentStatus === "pending_verification" && (
+                      <span style={{ display: "block", fontFamily: F.sans, fontSize: "0.65rem", color: A.gold, marginTop: 2 }}>📎 Proof uploaded</span>
+                    )}
                   </td>
                   <td className="p-4" onClick={e => e.stopPropagation()}>
                     <select value={o.status} onChange={e => changeStatus(o.id, e.target.value)}
@@ -1231,7 +1250,7 @@ export function AdminOrders() {
                   { label: "Phone",     val: detail.phone },
                   { label: "Address",   val: `${detail.address}, ${detail.city}, ${detail.province}` },
                   { label: "Payment",   val: detail.payment },
-                  { label: "Payment Status", val: detail.paymentStatus },
+                  { label: "Payment Status", val: detail.paymentStatus === "pending_verification" ? "Needs Review" : detail.paymentStatus },
                   { label: "Items",     val: `${detail.items} item(s)` },
                   { label: "Total",     val: `Rs. ${detail.total.toLocaleString()}` },
                 ].map(({ label, val }) => (
@@ -1240,6 +1259,39 @@ export function AdminOrders() {
                     <span style={{ fontFamily: F.sans, fontSize: "0.84rem", color: A.text, textAlign: "right", maxWidth: "60%" }}>{val}</span>
                   </div>
                 ))}
+
+                {/* Manual payment verification — JazzCash/Easypaisa proof review */}
+                {detail.paymentProofUrl && (
+                  <div className="p-4" style={{ backgroundColor: A.bg, border: `1px solid ${A.border}` }}>
+                    <label style={{ fontFamily: F.sans, fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: A.muted, display: "block", marginBottom: 8 }}>
+                      Payment Proof
+                    </label>
+                    {detail.paymentReference && (
+                      <p style={{ fontFamily: F.sans, fontSize: "0.8rem", color: A.text, marginBottom: 8 }}>
+                        Reference: <span style={{ color: A.gold }}>{detail.paymentReference}</span>
+                      </p>
+                    )}
+                    <a href={detail.paymentProofUrl} target="_blank" rel="noopener noreferrer">
+                      <img src={detail.paymentProofUrl} alt="Payment screenshot" className="w-full mb-3" style={{ maxHeight: 260, objectFit: "contain", border: `1px solid ${A.border}` }} />
+                    </a>
+                    {detail.paymentStatus === "pending_verification" && (
+                      <div className="flex gap-2">
+                        <ABtn size="sm" disabled={verifying} onClick={() => handleVerifyPayment(true)}>
+                          <Check size={12} /> Approve Payment
+                        </ABtn>
+                        <ABtn variant="ghost" size="sm" disabled={verifying} onClick={() => handleVerifyPayment(false)}>
+                          <X size={12} /> Reject
+                        </ABtn>
+                      </div>
+                    )}
+                    {detail.paymentStatus === "paid" && (
+                      <p style={{ fontFamily: F.sans, fontSize: "0.78rem", color: A.green2 }}>✓ Verified and approved</p>
+                    )}
+                    {detail.paymentStatus === "failed" && (
+                      <p style={{ fontFamily: F.sans, fontSize: "0.78rem", color: A.red }}>✕ Rejected</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Order items (real) */}
                 {detailItems.length > 0 && (

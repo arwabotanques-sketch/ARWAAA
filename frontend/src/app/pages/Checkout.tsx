@@ -6,8 +6,7 @@ import { useStore } from "../store";
 import { placeOrder } from "../api/checkout";
 import {
   createStripeCheckoutSession,
-  createJazzCashCheckout,
-  createEasypaisaCheckout,
+  submitPaymentProof,
   fetchPaymentConfig,
   type PaymentGatewayConfig,
 } from "../api/payments";
@@ -163,15 +162,20 @@ function Step1({ info, setInfo, onNext }: { info: CustomerInfo; setInfo: (i: Cus
 const PAY_METHODS_BASE: { id: PayMethod; label: string; desc: string; icon: string }[] = [
   { id: "cod",       label: "Cash on Delivery",    desc: "Pay in cash when your order arrives.", icon: "💵" },
   { id: "card",      label: "Debit / Credit Card", desc: "Pay securely via Stripe — Visa, Mastercard, and all major cards.", icon: "💳" },
-  { id: "jazzcash",  label: "JazzCash",             desc: "Pay with your JazzCash mobile account.", icon: "📱" },
-  { id: "easypaisa", label: "EasyPaisa",            desc: "Pay with your Easypaisa mobile account.", icon: "🟢" },
+  { id: "jazzcash",  label: "JazzCash",             desc: "Send payment, then upload a screenshot for verification.", icon: "📱" },
+  { id: "easypaisa", label: "EasyPaisa",            desc: "Send payment, then upload a screenshot for verification.", icon: "🟢" },
 ];
+
+const MANUAL_PAYMENT_ACCOUNTS: Record<"jazzcash" | "easypaisa", { number: string; name: string }> = {
+  jazzcash:  { number: "0327 1546119", name: "Muhammad Shehriyar Shoukat" },
+  easypaisa: { number: "0300 7257819", name: "Muhammad Umer Khalid" },
+};
 
 function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc, cartTotal, onBack, onPlace, placing, blocked, gatewayConfig }: {
   method: PayMethod; setMethod: (m: PayMethod) => void;
   coupon: string; setCoupon: (c: string) => void;
   couponDisc: number; setCouponDisc: (d: number) => void;
-  cartTotal: number; onBack: () => void; onPlace: () => void; placing: boolean; blocked?: boolean;
+  cartTotal: number; onBack: () => void; onPlace: (proofFile?: File | null, proofReference?: string) => void; placing: boolean; blocked?: boolean;
   gatewayConfig: PaymentGatewayConfig | null;
 }) {
   // While config is still loading, assume unavailable rather than briefly showing a
@@ -182,6 +186,8 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
   }));
   const [couponInput, setCouponInput] = useState("");
   const [terms, setTerms]             = useState(false);
+  const [proofFile, setProofFile]     = useState<File | null>(null);
+  const [proofReference, setProofReference] = useState("");
 
   const discAmt    = Math.round(cartTotal * (couponDisc / 100));
   const grandTotal = cartTotal - discAmt + SHIPPING;
@@ -194,7 +200,11 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
 
   const handlePlace = () => {
     if (!terms) { toast.error("Please accept the terms and conditions"); return; }
-    onPlace();
+    if ((method === "jazzcash" || method === "easypaisa") && !proofFile) {
+      toast.error("Please upload a screenshot of your payment.");
+      return;
+    }
+    onPlace(proofFile, proofReference);
   };
 
   return (
@@ -244,6 +254,46 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
           <Lock size={16} color={C.gold} className="flex-shrink-0 mt-0.5" />
           <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: C.muted, lineHeight: 1.6 }}>
             You'll be redirected to Stripe's secure checkout page to enter your card details and complete payment.
+          </p>
+        </motion.div>
+      )}
+
+      {/* Manual JazzCash/Easypaisa payment — send money, upload proof */}
+      {(method === "jazzcash" || method === "easypaisa") && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="p-4 space-y-4"
+          style={{ backgroundColor: "rgba(201,168,76,0.05)", border: `1px solid rgba(201,168,76,0.2)` }}>
+          <div>
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: C.muted, marginBottom: 6 }}>
+              Send <strong style={{ color: C.green }}>Rs. {(cartTotal - discAmt + SHIPPING).toLocaleString()}</strong> to:
+            </p>
+            <div className="p-3" style={{ backgroundColor: C.cream, border: `1px solid rgba(201,168,76,0.25)` }}>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: "1.15rem", fontWeight: 700, color: C.green }}>
+                {MANUAL_PAYMENT_ACCOUNTS[method].number}
+              </p>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: C.muted, marginTop: 2 }}>
+                {MANUAL_PAYMENT_ACCOUNTS[method].name} — {method === "jazzcash" ? "JazzCash" : "Easypaisa"}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: C.muted, display: "block", marginBottom: 4 }}>
+              Transaction ID / Reference (optional but helps us verify faster)
+            </label>
+            <input value={proofReference} onChange={e => setProofReference(e.target.value)} placeholder="e.g. TXN123456789"
+              className="w-full px-3 py-2.5 text-sm outline-none" style={{ border: `1px solid rgba(26,61,43,0.2)`, color: C.green, fontFamily: "'DM Sans',sans-serif", backgroundColor: "transparent" }} />
+          </div>
+
+          <div>
+            <label style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: C.muted, display: "block", marginBottom: 4 }}>
+              Upload payment screenshot <span style={{ color: "#d4183d" }}>*</span>
+            </label>
+            <input type="file" accept="image/*" onChange={e => setProofFile(e.target.files?.[0] || null)}
+              className="w-full text-sm" style={{ fontFamily: "'DM Sans',sans-serif", color: C.green }} />
+          </div>
+
+          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: C.muted, lineHeight: 1.6 }}>
+            Your order will be confirmed once we verify the payment — usually within a few hours.
           </p>
         </motion.div>
       )}
@@ -306,7 +356,7 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
 }
 
 // ─── Step 3: Success (Cash on Delivery only — Stripe orders land on /order-success instead) ──
-function Success({ info, orderId }: { info: CustomerInfo; orderId: string }) {
+function Success({ info, orderId, paymentPending }: { info: CustomerInfo; orderId: string; paymentPending?: boolean }) {
   const navigate = useNavigate();
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
@@ -317,10 +367,14 @@ function Success({ info, orderId }: { info: CustomerInfo; orderId: string }) {
         <Check size={36} color={C.green} strokeWidth={3} />
       </motion.div>
 
-      <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: "2rem", fontWeight: 700, color: C.green, marginBottom: 8 }}>Order Placed!</h2>
+      <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: "2rem", fontWeight: 700, color: C.green, marginBottom: 8 }}>
+        {paymentPending ? "Order Received!" : "Order Placed!"}
+      </h2>
       <p style={{ fontFamily: "'DM Sans',sans-serif", color: C.muted, marginBottom: 20, lineHeight: 1.7 }}>
         Thank you, <strong style={{ color: C.green }}>{info.fullName}</strong>!<br />
-        Your order has been placed successfully and will be processed shortly.
+        {paymentPending
+          ? "We're verifying your payment screenshot — you'll get a confirmation once it's approved, usually within a few hours."
+          : "Your order has been placed successfully and will be processed shortly."}
       </p>
 
       <div className="p-5 mb-8 mx-auto max-w-sm" style={{ backgroundColor: C.cream, border: `1px solid rgba(201,168,76,0.25)` }}>
@@ -349,7 +403,7 @@ function Success({ info, orderId }: { info: CustomerInfo; orderId: string }) {
       </div>
 
       <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.84rem", color: C.muted, marginBottom: 24 }}>
-        Questions? Contact us on WhatsApp: <a href="https://wa.me/923049067897" target="_blank" rel="noopener noreferrer" style={{ color: C.gold }}>+92 304 9067897</a>
+        Questions? Contact us on WhatsApp: <a href="https://wa.me/923714537622" target="_blank" rel="noopener noreferrer" style={{ color: C.gold }}>+92 304 9067897</a>
       </p>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -382,6 +436,7 @@ export default function Checkout() {
   });
 
   const [stockIssues, setStockIssues] = useState<Record<string, number>>({}); // productId -> available qty
+  const [paymentPending, setPaymentPending] = useState(false);
   const [checkingStock, setCheckingStock] = useState(false);
   const [gatewayConfig, setGatewayConfig] = useState<PaymentGatewayConfig | null>(null);
 
@@ -419,7 +474,7 @@ export default function Checkout() {
   const discAmt    = Math.round(cartTotal * (couponDisc / 100));
   const grandTotal = cartTotal - discAmt + SHIPPING;
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (proofFile?: File | null, proofReference?: string) => {
     setPlacing(true);
     try {
       const result = await placeOrder({
@@ -448,12 +503,17 @@ export default function Checkout() {
       }
 
       if (payMethod === "jazzcash" || payMethod === "easypaisa") {
-        // Same "don't clear cart / don't advance step yet" reasoning as the Stripe path
-        // above — but JazzCash/Easypaisa need a real form POST, not a URL redirect.
-        const session = payMethod === "jazzcash"
-          ? await createJazzCashCheckout(result.id)
-          : await createEasypaisaCheckout(result.id);
-        autoPostRedirect(session.url, session.fields);
+        // Upload the screenshot + reference right away, then show the customer a
+        // "pending verification" confirmation instead of assuming payment succeeded —
+        // an admin still has to approve it before the order actually finalizes.
+        if (proofFile) {
+          await submitPaymentProof(result.id, proofFile, proofReference || "");
+        }
+        setOrderId(result.order_number);
+        setPaymentPending(true);
+        clearCart();
+        setStep(2);
+        toast.success("Order placed! We'll confirm your payment shortly.");
         return;
       }
 
@@ -495,7 +555,7 @@ export default function Checkout() {
         <AnimatePresence mode="wait">
           {step === 2 ? (
             <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Success info={info} orderId={orderId} />
+              <Success info={info} orderId={orderId} paymentPending={paymentPending} />
             </motion.div>
           ) : (
             <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
