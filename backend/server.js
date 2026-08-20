@@ -35,9 +35,9 @@ const isProd = process.env.NODE_ENV === "production";
 // Middleware
 // ==========================
 
-// Comma-separated list in production (e.g. "https://arwaa.pk,https://www.arwaa.pk"),
+// Comma-separated list in production (e.g. "https://arwaa.pk,https://www.arwabotanics.com"),
 // falls back to localhost for local dev.
-const allowedOrigins = (process.env.FRONTEND_URL || ""https://arwaa.arwabotanques.workers.dev"")
+const allowedOrigins = (process.env.FRONTEND_URL || "https://arwabotanics.com/")
   .split(",")
   .map(o => o.trim());
 
