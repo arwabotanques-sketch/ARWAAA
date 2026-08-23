@@ -8,6 +8,18 @@ import {
   fetchCategories, createCategory, updateCategory, deleteCategory,
   type Category,
 } from "../api/categories";
+import {
+  fetchCoupons, createCoupon as createCouponApi, updateCoupon as updateCouponApi, deleteCoupon as deleteCouponApi,
+  type Coupon as CouponType,
+} from "../api/coupons";
+import {
+  fetchCoupons, createCoupon as createCouponApi, updateCoupon as updateCouponApi, deleteCoupon as deleteCouponApi,
+  type Coupon as CouponType,
+} from "../api/coupons";
+import {
+  fetchCoupons, createCoupon as createCouponApi, updateCoupon as updateCouponApi, deleteCoupon as deleteCouponApi,
+  type Coupon as CouponType,
+} from "../api/coupons";
 import { fetchDashboardStats, type DashboardStats as DashboardStatsType } from "../api/dashboard";
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
@@ -1519,24 +1531,62 @@ export function AdminCustomers() {
 
 // ─── Admin Marketing ──────────────────────────────────────────────────────────
 export function AdminMarketing() {
-  const [coupons, setCoupons]   = useState(ADMIN_COUPONS_DATA);
+  const [coupons, setCoupons]   = useState<CouponType[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editC, setEditC]       = useState<typeof ADMIN_COUPONS_DATA[0] | null>(null);
+  const [editC, setEditC]       = useState<CouponType | null>(null);
   const [flashSale, setFlashSale] = useState(true);
-  const [form, setForm] = useState({ code: "", type: "percent", discount: 0, maxUses: 100, expiry: "" });
+  const [form, setForm] = useState({ code: "", type: "percent" as "percent" | "fixed", discount: 0, maxUses: 100, expiry: "" });
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saving, setSaving]     = useState(false);
 
-  const save = () => {
+  useEffect(() => {
+    fetchCoupons()
+      .then(setCoupons)
+      .catch((err: any) => toast.error(err.message || "Failed to load coupons"))
+      .finally(() => setLoadingCoupons(false));
+  }, []);
+
+  const save = async () => {
     if (!form.code) { toast.error("Code is required"); return; }
-    if (editC) {
-      setCoupons(cs => cs.map(c => c.id === editC.id ? { ...c, ...form } : c));
-      toast.success("Coupon updated!");
-    } else {
-      setCoupons(cs => [...cs, { ...form, id: `cp${Date.now()}`, uses: 0, status: "active" as const }]);
-      toast.success("Coupon created!");
+    setSaving(true);
+    try {
+      const input = {
+        code: form.code,
+        type: form.type,
+        discount: form.discount,
+        maxUses: form.maxUses || null,
+        expiry: form.expiry || null,
+        status: (editC?.status ?? "active") as "active" | "draft" | "inactive",
+      };
+      if (editC) {
+        const updated = await updateCouponApi(editC.id, input);
+        setCoupons(cs => cs.map(c => c.id === editC.id ? updated : c));
+        toast.success("Coupon updated!");
+      } else {
+        const created = await createCouponApi(input);
+        setCoupons(cs => [created, ...cs]);
+        toast.success("Coupon created!");
+      }
+      setShowForm(false);
+      setForm({ code: "", type: "percent", discount: 0, maxUses: 100, expiry: "" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save coupon");
+    } finally {
+      setSaving(false);
     }
-    setShowForm(false);
-    setForm({ code: "", type: "percent", discount: 0, maxUses: 100, expiry: "" });
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await deleteCouponApi(id);
+      setCoupons(cs => cs.filter(c => c.id !== id));
+      toast.info("Coupon deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete coupon");
+    } finally {
+      setDeleteId(null);
+    }
   };
 
   const inp2: React.CSSProperties = { width: "100%", padding: "8px 12px", fontSize: "0.84rem", fontFamily: F.sans, backgroundColor: A.bg, border: `1px solid ${A.border}`, color: A.text, outline: "none" };
@@ -1583,18 +1633,22 @@ export function AdminMarketing() {
               </tr>
             </thead>
             <tbody>
-              {coupons.map(c => (
+              {loadingCoupons ? (
+                <tr><td colSpan={8} className="p-6 text-center" style={{ fontFamily: F.sans, fontSize: "0.84rem", color: A.muted }}>Loading coupons...</td></tr>
+              ) : coupons.length === 0 ? (
+                <tr><td colSpan={8} className="p-6 text-center" style={{ fontFamily: F.sans, fontSize: "0.84rem", color: A.muted }}>No coupons yet.</td></tr>
+              ) : coupons.map(c => (
                 <tr key={c.id} className="hover:bg-white/3 transition-colors" style={{ borderBottom: `1px solid ${A.border}` }}>
                   <td className="p-4"><code style={{ fontFamily: "'DM Mono',monospace", fontSize: "0.82rem", color: A.gold, fontWeight: 700 }}>{c.code}</code></td>
                   <td className="p-4"><span style={{ fontFamily: F.sans, fontSize: "0.88rem", color: A.ivory, fontWeight: 600 }}>{c.type === "percent" ? `${c.discount}%` : `Rs. ${c.discount}`}</span></td>
                   <td className="p-4"><span style={{ fontFamily: F.sans, fontSize: "0.78rem", color: A.muted, textTransform: "capitalize" }}>{c.type}</span></td>
                   <td className="p-4"><span style={{ fontFamily: F.sans, fontSize: "0.84rem", color: A.text }}>{c.uses}</span></td>
-                  <td className="p-4"><span style={{ fontFamily: F.sans, fontSize: "0.84rem", color: A.text }}>{c.maxUses}</span></td>
-                  <td className="p-4"><span style={{ fontFamily: F.sans, fontSize: "0.78rem", color: A.muted }}>{c.expiry}</span></td>
+                  <td className="p-4"><span style={{ fontFamily: F.sans, fontSize: "0.84rem", color: A.text }}>{c.maxUses ?? "—"}</span></td>
+                  <td className="p-4"><span style={{ fontFamily: F.sans, fontSize: "0.78rem", color: A.muted }}>{c.expiry ?? "—"}</span></td>
                   <td className="p-4"><ABadge status={c.status} /></td>
                   <td className="p-4">
                     <div className="flex gap-1">
-                      <button onClick={() => { setEditC(c); setForm({ code: c.code, type: c.type, discount: c.discount, maxUses: c.maxUses, expiry: c.expiry }); setShowForm(true); }}
+                      <button onClick={() => { setEditC(c); setForm({ code: c.code, type: c.type, discount: c.discount, maxUses: c.maxUses ?? 100, expiry: c.expiry ?? "" }); setShowForm(true); }}
                         className="p-1.5 hover:opacity-70"><Edit2 size={13} color={A.gold} /></button>
                       <button onClick={() => setDeleteId(c.id)} className="p-1.5 hover:opacity-70"><Trash2 size={13} color={A.red} /></button>
                     </div>
@@ -1618,25 +1672,25 @@ export function AdminMarketing() {
         <div className="space-y-4">
           {[["Coupon Code *", "code", "text"], ["Discount Value *", "discount", "number"], ["Max Uses", "maxUses", "number"], ["Expiry Date", "expiry", "text"]].map(([label, key, type]) => (
             <div key={key}>
-              <label style={{ fontFamily: F.sans, fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: A.muted, display: "block", marginBottom: 4 }}>{label}</label>
-              <input type={type} value={(form as any)[key]} onChange={e => setForm(f => ({ ...f, [key]: type === "number" ? +e.target.value : e.target.value.toUpperCase() }))} style={inp2} placeholder={key === "expiry" ? "Jul 31, 2026" : ""} />
+              <label style={{ fontFamily: F.sans, fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: A.muted,display: "block", marginBottom: 4 }}>{label}</label>
+              <input type={type} value={(form as any)[key]} onChange={e => setForm(f => ({ ...f, [key]: type === "number" ? +e.target.value : e.target.value.toUpperCase() }))} style={inp2} placeholder={key === "expiry" ? "2026-07-31" : ""} />
             </div>
           ))}
           <div>
             <label style={{ fontFamily: F.sans, fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: A.muted, display: "block", marginBottom: 4 }}>Type</label>
-            <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} style={{ ...inp2, width: "100%" }}>
+            <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as "percent" | "fixed" }))} style={{ ...inp2, width: "100%" }}>
               <option value="percent">Percentage (%)</option>
               <option value="fixed">Fixed Amount (Rs.)</option>
             </select>
           </div>
         </div>
         <div className="flex gap-3 mt-5">
-          <ABtn onClick={save}><Save size={13} /> {editC ? "Update" : "Create"}</ABtn>
+          <ABtn onClick={save} disabled={saving}><Save size={13} /> {saving ? "Saving..." : editC ? "Update" : "Create"}</ABtn>
           <ABtn variant="ghost" onClick={() => setShowForm(false)}>Cancel</ABtn>
         </div>
       </AModal>
 
-      <ConfirmModal open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) { setCoupons(cs => cs.filter(c => c.id !== deleteId)); toast.info("Coupon deleted"); setDeleteId(null); } }}
+      <ConfirmModal open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) remove(deleteId); }}
         title="Delete Coupon" message="Delete this coupon code? It will no longer be usable by customers." />
     </div>
   );
@@ -1915,7 +1969,7 @@ export function AdminReports() {
 
 // ─── Admin Settings ───────────────────────────────────────────────────────────
 export function AdminSettings() {
-  const [store, setStore]       = useState({ name: "Arwa Botaniqs", email: "arwabotanicss@gmail.com", phone: "+92 304 9067897", address: "Faisalabad, Pakistan", currency: "PKR", language: "English" });
+  const [store, setStore]       = useState({ name: "Arwa Botaniqs", email: "arwabotanicss@gmail.com", phone: "+92 371 4537622", address: "Faisalabad, Pakistan", currency: "PKR", language: "English" });
   const [shipping, setShipping] = useState({ rate: 300, minFree: 5000, days: "2-4" });
   const [maintenance, setMaintenance] = useState(false);
   const [payments, setPayments] = useState({ cod: true, jazzcash: true, easypaisa: true, visa: true });
@@ -2173,3 +2227,4 @@ export function AdminNotifications() {
     </div>
   );
 }
+

@@ -6,16 +6,9 @@ import { useStore } from "../store";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { C, FadeIn, StarRating, GoldLine } from "../shared";
 import { Trash2, Plus, Minus, ShoppingCart, Tag, Truck, RotateCcw, ArrowRight, ChevronRight } from "lucide-react";
+import { validateCouponCode } from "../api/coupons";
 
 const SHIPPING = 300;
-
-const COUPONS: Record<string, number> = {
-  ARWA10:  10,
-  WELCOME: 15,
-  BOTANIQ: 20,
-  SUMMER25: 25,
-  FLASH50: 50,
-};
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -27,14 +20,16 @@ export default function Cart() {
   const [giftNote,     setGiftNote]     = useState("");
   const [showGiftNote, setShowGiftNote] = useState(false);
 
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
-    if (COUPONS[code]) {
-      setCoupon(code);
-      setCouponDisc(COUPONS[code]);
-      toast.success(`Coupon applied! ${COUPONS[code]}% off`);
-    } else {
-      toast.error("Invalid coupon code");
+    if (!code) return;
+    try {
+      const result = await validateCouponCode(code);
+      setCoupon(result.code);
+      setCouponDisc(result.discount);
+      toast.success(`Coupon applied! ${result.discount}% off`);
+    } catch (err: any) {
+      toast.error(err.message || "Invalid coupon code");
     }
   };
 

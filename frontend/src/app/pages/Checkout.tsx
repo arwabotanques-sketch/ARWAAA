@@ -11,18 +11,23 @@ import {
   type PaymentGatewayConfig,
 } from "../api/payments";
 import { fetchProductStockBySlug } from "../api/products";
+import { validateCouponCode } from "../api/coupons";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { C, FadeIn, StarRating } from "../shared";
 import { ChevronRight, Check, Truck, Shield, RotateCcw, Tag, Lock } from "lucide-react";
 
 const PROVINCES = ["Punjab", "Sindh", "Khyber Pakhtunkhwa", "Balochistan", "Islamabad (ICT)", "Azad Kashmir (AJK)", "Gilgit-Baltistan"];
+const CITIES: Record<string, string[]> = {
+  "Punjab": ["Lahore","Faisalabad","Rawalpindi","Multan","Gujranwala","Sialkot","Bahawalpur","Sargodha","Sheikhupura","Jhang","Rahim Yar Khan","Gujrat","Kasur","Okara","Sahiwal","Wah Cantonment","Dera Ghazi Khan","Mianwali","Sadiqabad","Burewala","Chiniot","Kamoke","Hafizabad","Kot Addu","Jaranwala","Muridke","Khanewal","Vehari","Layyah","Toba Tek Singh"],
+  "Sindh": ["Karachi","Hyderabad","Sukkur","Larkana","Nawabshah","Mirpur Khas","Jacobabad","Shikarpur","Khairpur","Dadu","Tando Adam","Tando Allahyar","Badin","Thatta","Umerkot","Ghotki","Kashmore","Sanghar","Naushahro Feroze","Matiari"],
+  "Khyber Pakhtunkhwa": ["Peshawar","Mardan","Mingora","Kohat","Abbottabad","Dera Ismail Khan","Bannu","Swabi","Nowshera","Charsadda","Mansehra","Haripur","Karak","Tank","Chitral","Buner","Batkhela","Timergara","Lakki Marwat","Hangu"]
+};
 const SHIPPING  = 300;
 
-const COUPONS: Record<string, number> = { ARWA10: 10, WELCOME: 15, BOTANIQ: 20, SUMMER25: 25, FLASH50: 50 };
 
 type PayMethod = "cod" | "jazzcash" | "easypaisa" | "card";
 
-// JazzCash and Easypaisa are hosted "Page Post" checkouts — unlike Stripe, there's no
+// JazzCash and Easypaisa are hosted "Page Post" checkouts â€” unlike Stripe, there's no
 // URL to just redirect to. The gateway expects a real HTML form POST containing the
 // signed fields the backend generated. This builds that form off-screen and submits it,
 // which navigates the browser away exactly like window.location.href does for Stripe.
@@ -53,7 +58,7 @@ interface CustomerInfo {
   notes: string;
 }
 
-// ─── Step Indicator ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Step Indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StepIndicator({ step }: { step: number }) {
   const steps = ["Customer Info", "Payment", "Confirmation"];
   return (
@@ -79,7 +84,7 @@ function StepIndicator({ step }: { step: number }) {
   );
 }
 
-// ─── Input Field ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Input Field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
@@ -97,7 +102,7 @@ const inputStyle: React.CSSProperties = {
   color: C.green, fontFamily: "'DM Sans',sans-serif",
 };
 
-// ─── Step 1: Customer Info ────────────────────────────────────────────────────
+// â”€â”€â”€ Step 1: Customer Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Step1({ info, setInfo, onNext }: { info: CustomerInfo; setInfo: (i: CustomerInfo) => void; onNext: () => void }) {
   const update = (k: keyof CustomerInfo, v: string) => setInfo({ ...info, [k]: v });
 
@@ -131,20 +136,22 @@ function Step1({ info, setInfo, onNext }: { info: CustomerInfo; setInfo: (i: Cus
           </select>
         </Field>
         <Field label="City" required>
-          <input style={inputStyle} value={info.city} onChange={e => update("city", e.target.value)} placeholder="e.g. Lahore" required />
+          {["Punjab", "Sindh", "Khyber Pakhtunkhwa"].includes(info.province) ? (
+            <select style={{ ...inputStyle, backgroundColor: C.ivory }} value={info.city} onChange={e => update("city", e.target.value)} required>
+              <option value="">Select city...</option>
+              {CITIES[info.province].map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          ) : (
+            <input style={inputStyle} value={info.city} onChange={e => update("city", e.target.value)} placeholder="e.g. Lahore" required />
+          )}
         </Field>
       </div>
       <Field label="Complete Address" required>
         <textarea style={{ ...inputStyle, resize: "none" }} rows={3} value={info.address} onChange={e => update("address", e.target.value)} placeholder="House no., street, area..." required />
       </Field>
-      <div className="grid sm:grid-cols-2 gap-5">
-        <Field label="Postal Code">
-          <input style={inputStyle} value={info.postal} onChange={e => update("postal", e.target.value)} placeholder="e.g. 54000" />
-        </Field>
-        <Field label="Order Notes">
-          <input style={inputStyle} value={info.notes} onChange={e => update("notes", e.target.value)} placeholder="Any special instructions..." />
-        </Field>
-      </div>
+      <Field label="Order Notes">
+        <input style={inputStyle} value={info.notes} onChange={e => update("notes", e.target.value)} placeholder="Any special instructions..." />
+      </Field>
       <button type="submit" className="group w-full py-4 text-sm font-medium uppercase tracking-widest flex items-center justify-center gap-2"
         style={{ backgroundColor: C.green, color: C.ivory, fontFamily: "'DM Sans',sans-serif" }}>
         Continue to Payment <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -153,9 +160,9 @@ function Step1({ info, setInfo, onNext }: { info: CustomerInfo; setInfo: (i: Cus
   );
 }
 
-// ─── Step 2: Payment ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Step 2: Payment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Availability is driven by the live /payments/config response (gatewayConfig prop)
-// rather than hardcoded here — a gateway shows as available in the UI (per the
+// rather than hardcoded here â€” a gateway shows as available in the UI (per the
 // requirement to remove "Coming Soon"), but if its merchant credentials aren't actually
 // configured on the backend yet, gatewayConfig marks it unavailable with a clear message
 // instead of letting the customer hit a broken/silent failure at "Proceed to Payment".
@@ -185,21 +192,26 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
     available: gatewayConfig ? gatewayConfig[m.id === "card" ? "stripe" : m.id] : false,
   }));
   const [couponInput, setCouponInput] = useState("");
-  const [terms, setTerms]             = useState(false);
   const [proofFile, setProofFile]     = useState<File | null>(null);
   const [proofReference, setProofReference] = useState("");
 
   const discAmt    = Math.round(cartTotal * (couponDisc / 100));
   const grandTotal = cartTotal - discAmt + SHIPPING;
 
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
-    if (COUPONS[code]) { setCoupon(code); setCouponDisc(COUPONS[code]); toast.success(`Coupon applied! ${COUPONS[code]}% off`); }
-    else toast.error("Invalid coupon code");
+    if (!code) return;
+    try {
+      const result = await validateCouponCode(code);
+      setCoupon(result.code);
+      setCouponDisc(result.discount);
+      toast.success(`Coupon applied! ${result.discount}% off`);
+    } catch (err: any) {
+      toast.error(err.message || "Invalid coupon code");
+    }
   };
 
   const handlePlace = () => {
-    if (!terms) { toast.error("Please accept the terms and conditions"); return; }
     if ((method === "jazzcash" || method === "easypaisa") && !proofFile) {
       toast.error("Please upload a screenshot of your payment.");
       return;
@@ -239,7 +251,7 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
                   )}
                 </div>
                 <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: C.muted, marginTop: 2 }}>
-                  {!m.available ? "Not configured yet — please choose another method." : m.desc}
+                  {!m.available ? "Not configured yet â€” please choose another method." : m.desc}
                 </p>
               </div>
             </label>
@@ -247,7 +259,7 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
         </div>
       </div>
 
-      {/* Stripe redirect notice — real card entry happens on Stripe's hosted page, not here */}
+      {/* Stripe redirect notice â€” real card entry happens on Stripe's hosted page, not here */}
       {method === "card" && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="flex items-start gap-3 p-4"
           style={{ backgroundColor: "rgba(201,168,76,0.05)", border: `1px solid rgba(201,168,76,0.2)` }}>
@@ -258,7 +270,7 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
         </motion.div>
       )}
 
-      {/* Manual JazzCash/Easypaisa payment — send money, upload proof */}
+      {/* Manual JazzCash/Easypaisa payment â€” send money, upload proof */}
       {(method === "jazzcash" || method === "easypaisa") && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="p-4 space-y-4"
           style={{ backgroundColor: "rgba(201,168,76,0.05)", border: `1px solid rgba(201,168,76,0.2)` }}>
@@ -271,7 +283,7 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
                 {MANUAL_PAYMENT_ACCOUNTS[method].number}
               </p>
               <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: C.muted, marginTop: 2 }}>
-                {MANUAL_PAYMENT_ACCOUNTS[method].name} — {method === "jazzcash" ? "JazzCash" : "Easypaisa"}
+                {MANUAL_PAYMENT_ACCOUNTS[method].name} â€” {method === "jazzcash" ? "JazzCash" : "Easypaisa"}
               </p>
             </div>
           </div>
@@ -293,7 +305,7 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
           </div>
 
           <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: C.muted, lineHeight: 1.6 }}>
-            Your order will be confirmed once we verify the payment — usually within a few hours.
+            Your order will be confirmed once we verify the payment â€” usually within a few hours.
           </p>
         </motion.div>
       )}
@@ -311,7 +323,7 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
       ) : (
         <div className="flex items-center gap-2 px-3 py-2" style={{ backgroundColor: "rgba(45,138,78,0.08)", border: `1px solid rgba(45,138,78,0.3)` }}>
           <Tag size={13} color="#2d8a4e" />
-          <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: "#2d8a4e", flex: 1 }}>{coupon} applied — {couponDisc}% off</span>
+          <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: "#2d8a4e", flex: 1 }}>{coupon} applied â€” {couponDisc}% off</span>
           <button onClick={() => { setCoupon(""); setCouponDisc(0); }} className="text-xs" style={{ color: "#d4183d" }}>Remove</button>
         </div>
       )}
@@ -327,22 +339,10 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
         </div>
       </div>
 
-      {/* Terms */}
-      <label className="flex items-start gap-3 cursor-pointer">
-        <div className="w-4 h-4 border flex-shrink-0 mt-0.5 flex items-center justify-center"
-          style={{ borderColor: terms ? C.gold : "rgba(26,61,43,0.3)", backgroundColor: terms ? C.gold : "transparent" }}
-          onClick={() => setTerms(!terms)}>
-          {terms && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="3.5"><polyline points="20 6 9 17 4 12" /></svg>}
-        </div>
-        <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: C.muted, lineHeight: 1.6 }}>
-          I agree to the <span style={{ color: C.gold }}>Terms & Conditions</span> and <span style={{ color: C.gold }}>Privacy Policy</span>. I confirm my order details are correct.
-        </span>
-      </label>
-
       <div className="flex gap-3">
         <button onClick={onBack} className="px-5 py-3.5 text-sm border hover:bg-black/5 transition-colors"
           style={{ borderColor: "rgba(26,61,43,0.25)", color: C.green, fontFamily: "'DM Sans',sans-serif" }}>
-          ← Back
+          â† Back
         </button>
         <button onClick={handlePlace} disabled={placing || blocked} className="group flex-1 py-3.5 text-sm font-medium uppercase tracking-widest flex items-center justify-center gap-2"
           style={{ backgroundColor: C.gold, color: C.green, fontFamily: "'DM Sans',sans-serif", opacity: (placing || blocked) ? 0.5 : 1 }}>
@@ -355,7 +355,7 @@ function Step2({ method, setMethod, coupon, setCoupon, couponDisc, setCouponDisc
   );
 }
 
-// ─── Step 3: Success (Cash on Delivery only — Stripe orders land on /order-success instead) ──
+// â”€â”€â”€ Step 3: Success (Cash on Delivery only â€” Stripe orders land on /order-success instead) â”€â”€
 function Success({ info, orderId, paymentPending }: { info: CustomerInfo; orderId: string; paymentPending?: boolean }) {
   const navigate = useNavigate();
   return (
@@ -373,7 +373,7 @@ function Success({ info, orderId, paymentPending }: { info: CustomerInfo; orderI
       <p style={{ fontFamily: "'DM Sans',sans-serif", color: C.muted, marginBottom: 20, lineHeight: 1.7 }}>
         Thank you, <strong style={{ color: C.green }}>{info.fullName}</strong>!<br />
         {paymentPending
-          ? "We're verifying your payment screenshot — you'll get a confirmation once it's approved, usually within a few hours."
+          ? "We're verifying your payment screenshot â€” you'll get a confirmation once it's approved, usually within a few hours."
           : "Your order has been placed successfully and will be processed shortly."}
       </p>
 
@@ -390,7 +390,7 @@ function Success({ info, orderId, paymentPending }: { info: CustomerInfo; orderI
       {/* Delivery info cards */}
       <div className="grid grid-cols-3 gap-4 mb-8 max-w-sm mx-auto">
         {[
-          { Icon: Truck,    t: "2–4 Days",   s: "Estimated delivery" },
+          { Icon: Truck,    t: "2â€“4 Days",   s: "Estimated delivery" },
           { Icon: Shield,   t: "Secure",     s: "Safe & encrypted" },
           { Icon: RotateCcw, t: "2-Day",    s: "Return policy" },
         ].map(({ Icon, t, s }) => (
@@ -403,7 +403,7 @@ function Success({ info, orderId, paymentPending }: { info: CustomerInfo; orderI
       </div>
 
       <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.84rem", color: C.muted, marginBottom: 24 }}>
-        Questions? Contact us on WhatsApp: <a href="https://wa.me/923714537622" target="_blank" rel="noopener noreferrer" style={{ color: C.gold }}>+92 304 9067897</a>
+        Questions? Contact us on WhatsApp: <a href="https://wa.me/923714537622" target="_blank" rel="noopener noreferrer" style={{ color: C.gold }}>+92 371 4537622</a>
       </p>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -420,7 +420,7 @@ function Success({ info, orderId, paymentPending }: { info: CustomerInfo; orderI
   );
 }
 
-// ─── Checkout Page ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Checkout Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function Checkout() {
   const navigate  = useNavigate();
   const { cart, cartTotal, cartCount, clearCart } = useStore();
@@ -493,7 +493,7 @@ export default function Checkout() {
       } as any);
 
       if (payMethod === "card") {
-        // Order now exists as "pending" in the backend. Send the customer to Stripe —
+        // Order now exists as "pending" in the backend. Send the customer to Stripe â€”
         // do NOT clear the cart or advance the step here. The cart only clears once
         // /order-success confirms the payment actually went through; if the customer
         // cancels, /order-cancel needs the cart still intact.
@@ -504,7 +504,7 @@ export default function Checkout() {
 
       if (payMethod === "jazzcash" || payMethod === "easypaisa") {
         // Upload the screenshot + reference right away, then show the customer a
-        // "pending verification" confirmation instead of assuming payment succeeded —
+        // "pending verification" confirmation instead of assuming payment succeeded â€”
         // an admin still has to approve it before the order actually finalizes.
         if (proofFile) {
           await submitPaymentProof(result.id, proofFile, proofReference || "");
@@ -517,7 +517,7 @@ export default function Checkout() {
         return;
       }
 
-      // Cash on Delivery — unchanged from before.
+      // Cash on Delivery â€” unchanged from before.
       setOrderId(result.order_number);
       clearCart();
       setStep(2);
@@ -536,7 +536,7 @@ export default function Checkout() {
       }
       setPlacing(false);
     }
-    // Note: no `finally` resetting `placing` on the Stripe path — the page is
+    // Note: no `finally` resetting `placing` on the Stripe path â€” the page is
     // navigating away, so there's nothing left to re-enable.
   };
 
@@ -600,10 +600,10 @@ export default function Checkout() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.82rem", color: C.green, fontWeight: 600 }}>{item.product.name} {item.product.subtitle}</p>
-                          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: C.muted }}>Qty: {item.qty} · {item.product.weight}</p>
+                          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: C.muted }}>Qty: {item.qty} Â· {item.product.weight}</p>
                           {item.product.id in stockIssues && (
                             <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: "#d4183d", marginTop: 2 }}>
-                              {stockIssues[item.product.id] === 0 ? "Out of stock" : `Only ${stockIssues[item.product.id]} left`} — please update your cart
+                              {stockIssues[item.product.id] === 0 ? "Out of stock" : `Only ${stockIssues[item.product.id]} left`} â€” please update your cart
                             </p>
                           )}
                         </div>
@@ -623,7 +623,7 @@ export default function Checkout() {
 
                   {/* Trust */}
                   <div className="mt-5 pt-4 space-y-2" style={{ borderTop: `1px solid rgba(201,168,76,0.18)` }}>
-                    {[{ Icon: Shield, t: "Secure & encrypted payment" }, { Icon: Truck, t: "Delivery in 2–4 business days" }, { Icon: RotateCcw, t: "2-day hassle-free returns" }].map(({ Icon, t }) => (
+                    {[{ Icon: Shield, t: "Secure & encrypted payment" }, { Icon: Truck, t: "Delivery in 2â€“4 business days" }, { Icon: RotateCcw, t: "2-day hassle-free returns" }].map(({ Icon, t }) => (
                       <div key={t} className="flex items-center gap-2"><Icon size={12} color={C.gold} /><span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: C.muted }}>{t}</span></div>
                     ))}
                   </div>
@@ -636,3 +636,8 @@ export default function Checkout() {
     </div>
   );
 }
+
+
+
+
+
