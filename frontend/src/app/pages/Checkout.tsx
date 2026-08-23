@@ -18,7 +18,7 @@ import { ChevronRight, Check, Truck, Shield, RotateCcw, Tag, Lock } from "lucide
 const PROVINCES = ["Punjab", "Sindh", "Khyber Pakhtunkhwa", "Balochistan", "Islamabad (ICT)", "Azad Kashmir (AJK)", "Gilgit-Baltistan"];
 const SHIPPING  = 300;
 
-const COUPONS: Record<string, number> = { ARWA10: 10, WELCOME: 15, BOTANIQ: 20 };
+const COUPONS: Record<string, number> = { ARWA10: 10, WELCOME: 15, BOTANIQ: 20, SUMMER25: 25, FLASH50: 50 };
 
 type PayMethod = "cod" | "jazzcash" | "easypaisa" | "card";
 

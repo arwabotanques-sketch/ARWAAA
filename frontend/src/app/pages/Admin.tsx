@@ -104,7 +104,7 @@ const TRAFFIC_DATA = [
 const ADMIN_COUPONS_DATA = [
   { id:"cp1",code:"ARWA10",   type:"percent",discount:10,uses:23,maxUses:100,expiry:"Jul 31, 2026",status:"active" },
   { id:"cp2",code:"WELCOME",  type:"percent",discount:15,uses:8, maxUses:50, expiry:"Jul 15, 2026",status:"active" },
-  { id:"cp3",code:"BOTANIQ20",type:"percent",discount:20,uses:5, maxUses:30, expiry:"Aug 1, 2026", status:"active" },
+  { id:"cp3",code:"BOTANIQ"  ,type:"percent",discount:20,uses:5, maxUses:30, expiry:"Aug 1, 2026", status:"active" },
   { id:"cp4",code:"SUMMER25", type:"percent",discount:25,uses:12,maxUses:50, expiry:"Jul 31, 2026",status:"active" },
   { id:"cp5",code:"FLASH50",  type:"fixed",  discount:50,uses:0, maxUses:20, expiry:"Jul 5, 2026", status:"draft"  },
 ];

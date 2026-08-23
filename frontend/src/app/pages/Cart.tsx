@@ -13,6 +13,8 @@ const COUPONS: Record<string, number> = {
   ARWA10:  10,
   WELCOME: 15,
   BOTANIQ: 20,
+  SUMMER25: 25,
+  FLASH50: 50,
 };
 
 export default function Cart() {
