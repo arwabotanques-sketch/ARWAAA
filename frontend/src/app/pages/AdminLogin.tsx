@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { useStore } from "../store";
@@ -22,7 +22,7 @@ const inp: React.CSSProperties = {
   color: A.ivory, fontFamily: "'DM Sans',sans-serif", transition: "border-color 0.2s",
 };
 
-// ─── Lock Screen (session timeout) ────────────────────────────────────────────
+// â”€â”€â”€ Lock Screen (session timeout) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Instead of checking a hardcoded password, this now re-checks the entered
 // password against the real backend, using the currently logged-in admin's email.
 export function AdminLockScreen({ onUnlock }: { onUnlock: () => void }) {
@@ -86,7 +86,7 @@ export function AdminLockScreen({ onUnlock }: { onUnlock: () => void }) {
   );
 }
 
-// ─── Admin Login Page ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Admin Login Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminLogin() {
   const navigate        = useNavigate();
   const { adminLogin, isAdmin } = useStore();
@@ -147,7 +147,7 @@ export default function AdminLogin() {
           </div>
 
           <a href="/" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.75rem", color: "rgba(245,240,232,0.35)", marginTop: 32, display: "block", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>
-            ← Back to Store
+            â† Back to Store
           </a>
         </div>
       </div>
@@ -183,7 +183,7 @@ export default function AdminLogin() {
                 <label style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(201,168,76,0.75)", display: "block", marginBottom: 6 }}>Password</label>
                 <div className="relative">
                   <Lock size={14} color="rgba(201,168,76,0.45)" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input type={showPass ? "text" : "password"} value={pass} onChange={e => setPass(e.target.value)} placeholder="••••••••" style={{ ...inp, paddingRight: 42 }} required />
+                  <input type={showPass ? "text" : "password"} value={pass} onChange={e => setPass(e.target.value)} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" style={{ ...inp, paddingRight: 42 }} required />
                   <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2">
                     {showPass ? <EyeOff size={14} color={A.muted} /> : <Eye size={14} color={A.muted} />}
                   </button>
@@ -210,8 +210,7 @@ export default function AdminLogin() {
                   </div>
                   <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: A.muted }}>Remember me</span>
                 </label>
-                <button type="button" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: A.gold }} className="hover:opacity-70">Forgot password?</button>
-              </div>
+                              </div>
 
               <button type="submit" disabled={loading} className="w-full py-3.5 text-sm font-medium uppercase tracking-widest transition-opacity"
                 style={{ backgroundColor: A.gold, color: A.green, fontFamily: "'DM Sans',sans-serif", opacity: loading ? 0.7 : 1 }}>
@@ -220,7 +219,7 @@ export default function AdminLogin() {
             </form>
 
             <a href="/" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: "rgba(245,240,232,0.3)", display: "block", textAlign: "center", marginTop: 16, textDecoration: "none", letterSpacing: "0.1em" }}
-              className="hover:text-[#c9a84c] transition-colors">← Back to Customer Site</a>
+              className="hover:text-[#c9a84c] transition-colors">â† Back to Customer Site</a>
           </div>
         </motion.div>
       </div>
