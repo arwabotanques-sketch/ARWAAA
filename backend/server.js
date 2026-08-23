@@ -23,6 +23,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
+import couponRoutes from "./routes/couponRoutes.js";
 
 dotenv.config();
 validateEnv();
@@ -92,6 +93,7 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/coupons", couponRoutes);
 
 // ==========================
 // 404 + Global Error Handling
