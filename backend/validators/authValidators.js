@@ -1,6 +1,6 @@
-import { body } from "express-validator";
+﻿import { body } from "express-validator";
 
-// Same regex the frontend's pwStrength() scores against — min 8, upper, lower, number,
+// Same regex the frontend's pwStrength() scores against â€” min 8, upper, lower, number,
 // special char. Keeping the enforcement server-side too since the frontend check alone
 // is trivially bypassed by calling the API directly.
 const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
@@ -13,7 +13,7 @@ export const registerValidation = [
     body("first_name").trim().notEmpty().withMessage("First name is required").isLength({ max: 60 }),
     body("last_name").trim().notEmpty().withMessage("Last name is required").isLength({ max: 60 }),
     body("email").trim().isEmail().withMessage("Valid email is required").normalizeEmail(),
-    body("phone").trim().notEmpty().withMessage("Phone number is required").isLength({ max: 20 }),
+    body("phone").trim().notEmpty().withMessage("Phone number is required").isMobilePhone("en-PK").withMessage("Please enter a valid Pakistani mobile number (e.g. 03XXXXXXXXX or +923XXXXXXXXX)."),
     strongPassword(),
 ];
 
@@ -36,7 +36,7 @@ export const resendOtpValidation = [
 ];
 
 export const resetPasswordValidation = [
-    body("resetToken").notEmpty().withMessage("Reset session expired — please start again."),
+    body("resetToken").notEmpty().withMessage("Reset session expired â€” please start again."),
     strongPassword("newPassword"),
 ];
 
@@ -48,3 +48,4 @@ export const verifyEmailTokenValidation = [
 export const socialAuthValidation = [
     body("accessToken").notEmpty().withMessage("Missing access token."),
 ];
+
