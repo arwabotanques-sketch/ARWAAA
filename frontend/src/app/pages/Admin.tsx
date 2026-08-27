@@ -12,14 +12,17 @@ import {
   fetchCoupons, createCoupon as createCouponApi, updateCoupon as updateCouponApi, deleteCoupon as deleteCouponApi,
   type Coupon as CouponType,
 } from "../api/coupons";
+import { fetchShippingSettings, updateShippingSettings as updateShippingSettingsApi } from "../api/shippingSettings";
 import {
   fetchCoupons, createCoupon as createCouponApi, updateCoupon as updateCouponApi, deleteCoupon as deleteCouponApi,
   type Coupon as CouponType,
 } from "../api/coupons";
+import { fetchShippingSettings, updateShippingSettings as updateShippingSettingsApi } from "../api/shippingSettings";
 import {
   fetchCoupons, createCoupon as createCouponApi, updateCoupon as updateCouponApi, deleteCoupon as deleteCouponApi,
   type Coupon as CouponType,
 } from "../api/coupons";
+import { fetchShippingSettings, updateShippingSettings as updateShippingSettingsApi } from "../api/shippingSettings";
 import { fetchDashboardStats, type DashboardStats as DashboardStatsType } from "../api/dashboard";
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
@@ -1971,6 +1974,19 @@ export function AdminReports() {
 export function AdminSettings() {
   const [store, setStore]       = useState({ name: "Arwa Botaniqs", email: "arwabotanicss@gmail.com", phone: "+92 371 4537622", address: "Faisalabad, Pakistan", currency: "PKR", language: "English" });
   const [shipping, setShipping] = useState({ rate: 300, minFree: 5000, days: "2-4" });
+  const [savingShipping, setSavingShipping] = useState(false);
+  useEffect(() => { fetchShippingSettings().then(s => setShipping({ rate: s.rate, minFree: s.minFree ?? 0, days: s.days })).catch(() => {}); }, []);
+  const saveShipping = async () => {
+    setSavingShipping(true);
+    try {
+      await updateShippingSettingsApi(shipping);
+      toast.success("Shipping settings saved!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save shipping settings");
+    } finally {
+      setSavingShipping(false);
+    }
+  };
   const [maintenance, setMaintenance] = useState(false);
   const [payments, setPayments] = useState({ cod: true, jazzcash: true, easypaisa: true, visa: true });
   const [tab, setTab]           = useState("store");
@@ -2031,7 +2047,7 @@ export function AdminSettings() {
               </div>
             ))}
           </div>
-          <ABtn onClick={() => toast.success("Shipping settings saved!")}><Save size={13} /> Save</ABtn>
+          <ABtn onClick={saveShipping} disabled={savingShipping}><Save size={13} /> {savingShipping ? "Saving..." : "Save"}</ABtn>
         </ACard>
       )}
 

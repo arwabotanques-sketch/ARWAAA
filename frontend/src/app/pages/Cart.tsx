@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -7,8 +7,8 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { C, FadeIn, StarRating, GoldLine } from "../shared";
 import { Trash2, Plus, Minus, ShoppingCart, Tag, Truck, RotateCcw, ArrowRight, ChevronRight } from "lucide-react";
 import { validateCouponCode } from "../api/coupons";
+import { fetchShippingSettings } from "../api/shippingSettings";
 
-const SHIPPING = 300;
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -20,6 +20,9 @@ export default function Cart() {
   const [giftNote,     setGiftNote]     = useState("");
   const [showGiftNote, setShowGiftNote] = useState(false);
 
+  const [shippingRate, setShippingRate] = useState(300);
+  useEffect(() => { fetchShippingSettings().then(s => setShippingRate(s.rate)).catch(() => {}); }, []);
+  const SHIPPING = shippingRate;
   const applyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
     if (!code) return;
