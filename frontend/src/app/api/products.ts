@@ -23,6 +23,8 @@ export interface BackendProduct {
   status: boolean;             // true = active, false = draft
   image_url: string | null;
   image_public_id: string | null;
+  image_url_2?: string | null;
+  image_url_3?: string | null;
   video_url?: string | null;
   // Present in the DB row (SELECT p.*) but not previously surfaced here —
   // needed for the customer-facing storefront mapper below.
@@ -51,6 +53,8 @@ export interface AdminProduct {
   tags: string[];
   weight: string;
   imageUrl: string | null;
+  imageUrl2?: string | null;
+  imageUrl3?: string | null;
 }
 
 // Converts one backend product into the shape the UI expects
@@ -72,6 +76,8 @@ export function toAdminProduct(p: BackendProduct): AdminProduct {
     tags: p.tags || [],
     weight: p.weight || "",
     imageUrl: p.image_url,
+    imageUrl2: p.image_url_2 ?? null,
+    imageUrl3: p.image_url_3 ?? null,
   };
 }
 
@@ -81,7 +87,7 @@ export async function fetchProducts(): Promise<AdminProduct[]> {
 }
 
 // Builds the multipart form the backend expects, from the AdminProduct form shape
-function buildProductFormData(form: AdminProduct & { imageFile?: File | null; videoFile?: File | null }): FormData {
+function buildProductFormData(form: AdminProduct & { imageFile?: File | null; videoFile?: File | null; imageFile2?: File | null; imageFile3?: File | null }): FormData {
   const fd = new FormData();
   fd.append("category_id", form.category);
   fd.append("name", form.name);
@@ -99,15 +105,17 @@ function buildProductFormData(form: AdminProduct & { imageFile?: File | null; vi
   fd.append("weight", form.weight);
   if (form.imageFile) fd.append("image", form.imageFile);
   if (form.videoFile) fd.append("video", form.videoFile);
+  if (form.imageFile2) fd.append("image2", form.imageFile2);
+  if (form.imageFile3) fd.append("image3", form.imageFile3);
   return fd;
 }
 
-export async function createProduct(form: AdminProduct & { imageFile?: File | null; videoFile?: File | null }): Promise<AdminProduct> {
+export async function createProduct(form: AdminProduct & { imageFile?: File | null; videoFile?: File | null; imageFile2?: File | null; imageFile3?: File | null }): Promise<AdminProduct> {
   const data = await apiFetch("/products", { method: "POST", body: buildProductFormData(form) });
   return toAdminProduct(data.product);
 }
 
-export async function updateProduct(id: string, form: AdminProduct & { imageFile?: File | null; videoFile?: File | null }): Promise<AdminProduct> {
+export async function updateProduct(id: string, form: AdminProduct & { imageFile?: File | null; videoFile?: File | null; imageFile2?: File | null; imageFile3?: File | null }): Promise<AdminProduct> {
   const data = await apiFetch(`/products/${id}`, { method: "PUT", body: buildProductFormData(form) });
   return toAdminProduct(data.product);
 }
@@ -221,6 +229,8 @@ export function toStorefrontProduct(p: BackendProduct): Product {
     isBestSeller: (p.sold ?? 0) > 15,
     isFeatured: !!p.featured,
     imageUrl: p.image_url,
+    imageUrl2: p.image_url_2 ?? null,
+    imageUrl3: p.image_url_3 ?? null,
     videoUrl: p.video_url ?? null,
   };
   return storefrontProduct;

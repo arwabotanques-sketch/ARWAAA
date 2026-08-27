@@ -121,9 +121,15 @@ function ImageGallery({ product }: { product: Product }) {
   const [view360, setView360]   = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
 
-  // Real product photo first, then the brand shots as supporting images.
+  // Only the product's own real photo is shown. The brand fallback images exist
+  // solely as an empty-state placeholder for products with no photo uploaded yet —
+  // they must never be appended alongside a real product image.
   const GALLERY_IMAGES = product.imageUrl
-    ? [{ src: product.imageUrl, alt: `${product.name} ${product.subtitle}` }, ...FALLBACK_GALLERY_IMAGES]
+    ? [
+        { src: product.imageUrl, alt: `${product.name} ${product.subtitle}` },
+        ...(product.imageUrl2 ? [{ src: product.imageUrl2, alt: `${product.name} ${product.subtitle} — photo 2` }] : []),
+        ...(product.imageUrl3 ? [{ src: product.imageUrl3, alt: `${product.name} ${product.subtitle} — photo 3` }] : []),
+      ]
     : FALLBACK_GALLERY_IMAGES;
 
   return (

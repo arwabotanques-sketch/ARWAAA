@@ -745,6 +745,8 @@ export function AdminProducts() {
   const [saving,   setSaving]     = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [imageFile2, setImageFile2] = useState<File | null>(null);
+  const [imageFile3, setImageFile3] = useState<File | null>(null);
 
   const empty: AdminProductType = { id:"", name:"", subtitle:"", sku:"", price:0, oldPrice:0, discount:0, stock:0, sold:0, status:"active", featured:false, category:"", categoryName:"", tags:[], weight:"", imageUrl:null };
   const [form, setForm]  = useState<AdminProductType>(empty);
@@ -769,8 +771,8 @@ export function AdminProducts() {
     .filter(p => `${p.name} ${p.subtitle} ${p.sku}`.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => sortBy === "price" ? a.price - b.price : sortBy === "stock" ? a.stock - b.stock : a.name.localeCompare(b.name));
 
-  const openAdd  = () => { setForm({ ...empty, category: categories[0]?.id || "" }); setEditProduct(null); setImageFile(null); setVideoFile(null); setShowForm(true); };
-  const openEdit = (p: AdminProductType) => { setForm(p); setEditProduct(p); setImageFile(null); setVideoFile(null); setShowForm(true); };
+  const openAdd  = () => { setForm({ ...empty, category: categories[0]?.id || "" }); setEditProduct(null); setImageFile(null); setVideoFile(null); setImageFile2(null); setImageFile3(null); setShowForm(true); };
+  const openEdit = (p: AdminProductType) => { setForm(p); setEditProduct(p); setImageFile(null); setVideoFile(null); setImageFile2(null); setImageFile3(null); setShowForm(true); };
 
   const saveProduct = async () => {
     if (!form.name || !form.sku) { toast.error("Name and SKU are required"); return; }
@@ -779,11 +781,11 @@ export function AdminProducts() {
     setSaving(true);
     try {
       if (editProduct) {
-        const updated = await updateProductApi(editProduct.id, { ...form, imageFile, videoFile });
+        const updated = await updateProductApi(editProduct.id, { ...form, imageFile, videoFile, imageFile2, imageFile3 });
         setProducts(ps => ps.map(p => p.id === editProduct.id ? updated : p));
         toast.success("Product updated!");
       } else {
-        const created = await createProductApi({ ...form, imageFile, videoFile });
+        const created = await createProductApi({ ...form, imageFile, videoFile, imageFile2, imageFile3 });
         setProducts(ps => [...ps, created]);
         toast.success("Product added!");
       }
@@ -935,6 +937,14 @@ export function AdminProducts() {
           <div>
             <label style={{ fontFamily: F.sans, fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: A.muted, display: "block", marginBottom: 4 }}>Product Video (optional)</label>
             <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e => setVideoFile(e.target.files?.[0] || null)} style={inp2} />
+          </div>
+          <div>
+            <label style={{ fontFamily: F.sans, fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: A.muted, display: "block", marginBottom: 4 }}>Product Image 2 (optional)</label>
+            <input type="file" accept="image/*" onChange={e => setImageFile2(e.target.files?.[0] || null)} style={inp2} />
+          </div>
+          <div>
+            <label style={{ fontFamily: F.sans, fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: A.muted, display: "block", marginBottom: 4 }}>Product Image 3 (optional)</label>
+            <input type="file" accept="image/*" onChange={e => setImageFile3(e.target.files?.[0] || null)} style={inp2} />
           </div>
           <div className="flex items-center gap-2 pt-4">
             <input type="checkbox" id="feat" checked={form.featured} onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))} />
