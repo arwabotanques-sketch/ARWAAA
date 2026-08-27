@@ -135,6 +135,29 @@ export const createProduct = async (req, res) => {
             videoUrl = videoUploadResult.secure_url;
         }
 
+        let imageUrl2 = null;
+        let imagePublicId2 = null;
+        let imageUrl3 = null;
+        let imagePublicId3 = null;
+
+        // Upload second image if provided
+        if (req.files?.image2?.[0]) {
+            const uploadResult2 = await cloudinary.uploader.upload(req.files.image2[0].path, {
+                folder: "arwa-products"
+            });
+            imageUrl2 = uploadResult2.secure_url;
+            imagePublicId2 = uploadResult2.public_id;
+        }
+
+        // Upload third image if provided
+        if (req.files?.image3?.[0]) {
+            const uploadResult3 = await cloudinary.uploader.upload(req.files.image3[0].path, {
+                folder: "arwa-products"
+            });
+            imageUrl3 = uploadResult3.secure_url;
+            imagePublicId3 = uploadResult3.public_id;
+        }
+
         if (!category_id || !name || !slug || !price || !sku) {
             return res.status(400).json({
                 success: false,
@@ -175,11 +198,15 @@ export const createProduct = async (req, res) => {
                 status,
                 image_url,
                 image_public_id,
-                video_url
+                video_url,
+                image_url_2,
+                image_public_id_2,
+                image_url_3,
+                image_public_id_3
             )
             VALUES
             (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26
             )
             RETURNING *;
             `,
@@ -205,7 +232,11 @@ export const createProduct = async (req, res) => {
                 status,
                 imageUrl,
                 imagePublicId,
-                videoUrl
+                videoUrl,
+                imageUrl2,
+                imagePublicId2,
+                imageUrl3,
+                imagePublicId3
             ]
         );
 
@@ -252,7 +283,10 @@ export const updateProduct = async (req, res) => {
         let imageUrl = product.image_url;
         let imagePublicId = product.image_public_id;
         let videoUrl = product.video_url;
-
+        let imageUrl2 = product.image_url_2;
+        let imagePublicId2 = product.image_public_id_2;
+        let imageUrl3 = product.image_url_3;
+        let imagePublicId3 = product.image_public_id_3;
         // Upload new image if provided
         if (req.files?.image?.[0]) {
 
@@ -279,7 +313,33 @@ export const updateProduct = async (req, res) => {
                 { folder: "arwa-products", resource_type: "video" }
             );
             videoUrl = videoUploadResult.secure_url;
-        }   
+        }
+
+        // Upload new second image if provided",
+        if (req.files?.image2?.[0]) {
+            if (imagePublicId2) {
+                await cloudinary.uploader.destroy(imagePublicId2);
+            }
+            const uploadResult2 = await cloudinary.uploader.upload(
+                req.files.image2[0].path,
+                { folder: "arwa-products" }
+            );
+            imageUrl2 = uploadResult2.secure_url;
+            imagePublicId2 = uploadResult2.public_id;
+        }
+
+        // Upload new third image if provided
+        if (req.files?.image3?.[0]) {
+            if (imagePublicId3) {
+                await cloudinary.uploader.destroy(imagePublicId3);
+            }
+            const uploadResult3 = await cloudinary.uploader.upload(
+                req.files.image3[0].path,
+                { folder: "arwa-products" }
+            );
+            imageUrl3 = uploadResult3.secure_url;
+            imagePublicId3 = uploadResult3.public_id;
+        }
 
         const {
             category_id,
@@ -338,8 +398,12 @@ export const updateProduct = async (req, res) => {
                 image_url=$20,
                 image_public_id=$21,
                 video_url=$22,
+                image_url_2=$23,
+                image_public_id_2=$24,
+                image_url_3=$25,
+                image_public_id_3=$26,
                 updated_at=NOW()
-            WHERE id=$23
+            WHERE id=$27
             RETURNING *;
             `,
             [
@@ -365,6 +429,10 @@ export const updateProduct = async (req, res) => {
                 imageUrl,
                 imagePublicId,
                 videoUrl,
+                imageUrl2,
+                imagePublicId2,
+                imageUrl3,
+                imagePublicId3,
                 id
             ]
         );

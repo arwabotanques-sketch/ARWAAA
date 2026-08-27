@@ -33,7 +33,7 @@ router.get("/:slug", productSlugParam, validate, getSingleProduct);
 router.post(
     "/",
     authMiddleware,
-    upload.fields([{ name: "image", maxCount: 1 }, { name: "video", maxCount: 1 }]),
+    upload.fields([{ name: "image", maxCount: 1 }, { name: "video", maxCount: 1 }, { name: "image2", maxCount: 1 }, { name: "image3", maxCount: 1 }]),
     createProductValidation,
     validate,
     createProduct
@@ -43,7 +43,7 @@ router.post(
 router.put(
     "/:id",
     authMiddleware,
-    upload.fields([{ name: "image", maxCount: 1 }, { name: "video", maxCount: 1 }]),
+    upload.fields([{ name: "image", maxCount: 1 }, { name: "video", maxCount: 1 }, { name: "image2", maxCount: 1 }, { name: "image3", maxCount: 1 }]),
     updateProductValidation,
     validate,
     updateProduct
