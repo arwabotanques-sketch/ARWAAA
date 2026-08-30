@@ -315,8 +315,8 @@ function ProductTabs({ product }: { product: Product }) {
             <div className="flex items-start gap-3 p-4" style={{ backgroundColor: "rgba(201,168,76,0.06)", border: `1px solid rgba(201,168,76,0.15)` }}>
               <RotateCcw size={18} color={C.gold} style={{ flexShrink: 0, marginTop: 2 }} />
               <div>
-                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.9rem", fontWeight: 600, color: C.green }}>Returns</p>
-                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.84rem", color: "#4a5a4a", lineHeight: 1.7 }}>{product.returnPolicy}</p>
+                
+                
               </div>
             </div>
           </div>

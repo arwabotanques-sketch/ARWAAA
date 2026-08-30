@@ -341,7 +341,7 @@ function FeaturedProduct() {
 
               <div className="flex flex-wrap gap-x-6 gap-y-2 mt-6 pt-6" style={{ borderTop: `1px solid rgba(26,61,43,0.1)` }}>
                 <div className="flex items-center gap-2"><Truck size={14} color={C.muted} /><span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: C.muted }}>Delivery 2–4 Days · Rs. 300</span></div>
-                <div className="flex items-center gap-2"><RotateCcw size={14} color={C.muted} /><span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.78rem", color: C.muted }}>2-Day Returns</span></div>
+                
               </div>
             </div>
           </FadeIn>

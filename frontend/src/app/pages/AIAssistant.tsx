@@ -27,7 +27,7 @@ const BOT_RESPONSES: { keywords: string[]; text: string }[] = [
   { keywords: ["deliver", "shipping", "how long", "when", "arrival", "days"],
     text: "We deliver across all of Pakistan within **2–4 business days**. 🚚 Shipping is a flat Rs. 300 per order regardless of quantity. We dispatch orders Monday through Sunday, so weekends are not a problem! You will receive a tracking number once your order ships." },
   { keywords: ["return", "refund", "exchange", "unsatisfied", "money back"],
-    text: "We offer a **2-day return policy** from the date of delivery. 🔄 If you are not satisfied, contact us within 2 days on WhatsApp (+92 304 9067897) and we will arrange a hassle-free return. Your satisfaction is our priority!" },
+    text: "We currently do not offer returns. If you have an issue with your order, please reach out to us on WhatsApp and we will help." },
   { keywords: ["routine", "steps", "how to use", "apply", "wash", "use it"],
     text: "Here's the perfect routine with Arwa Botaniqs: ✅ 1. Wet your face with warm water. 2. Lather the soap between your palms. 3. Massage gently in circular motions for 30–60 seconds. 4. Rinse thoroughly with clean water. 5. Pat dry with a soft towel. 6. Apply your favourite moisturiser. Repeat morning and evening! 🌿" },
   { keywords: ["weight", "size", "how big", "gram", "200g"],
@@ -39,7 +39,7 @@ const BOT_RESPONSES: { keywords: string[]; text: string }[] = [
   { keywords: ["track", "tracking", "order status", "where is my order", "my order"],
     text: "You can track your order anytime from your Dashboard under **My Orders** 📦, or use the tracking number sent to you once your order ships. If you need help locating it, message us on WhatsApp and we'll check for you!" },
   { keywords: ["cancel", "cancellation"],
-    text: "Need to cancel an order? No problem — as long as it hasn't shipped yet, we can cancel it for you. Just message us on WhatsApp (+92 304 9067897) with your order number and we'll take care of it right away." },
+    text: "Need to cancel an order? No problem — as long as it hasn't shipped yet, we can cancel it for you. Just message us on WhatsApp (+92 371 4537622) with your order number and we'll take care of it right away." },
   { keywords: ["expiry", "expire", "shelf life", "how long does it last", "expiration"],
     text: "Arwa Botaniqs Beauty Soap has a shelf life of **24 months** from the manufacturing date when stored in a cool, dry place. 🌿 Since it's made with natural botanical extracts and no harsh synthetic preservatives, we recommend using it within 4–6 weeks of opening for the freshest experience." },
   { keywords: ["halal", "cruelty free", "cruelty-free", "vegan", "animal test"],
@@ -47,13 +47,13 @@ const BOT_RESPONSES: { keywords: string[]; text: string }[] = [
   { keywords: ["coupon", "discount code", "promo code", "arwa10", "voucher"],
     text: "You can use coupon code **ARWA10** at checkout for extra savings on top of our current 45% off sale! 💛 Keep an eye on our flash sale banner for limited-time offers too." },
   { keywords: ["bulk", "wholesale", "multiple bars", "gift set", "gift pack"],
-    text: "Looking to order in bulk or as a gift set? 🎁 We'd love to help — please reach out to us directly on WhatsApp (+92 304 9067897) so our team can discuss quantities and special pricing with you." },
+    text: "Looking to order in bulk or as a gift set? 🎁 We'd love to help — please reach out to us directly on WhatsApp (+92 371 4537622) so our team can discuss quantities and special pricing with you." },
   { keywords: ["men", "man", "beard", "male skin"],
     text: "Absolutely — Arwa Botaniqs Beauty Soap works great for men too! 🌿 The Neem and Tea Tree extracts are especially effective against everyday oil buildup, and it's gentle enough to use on the face, neck, and beard area." },
   { keywords: ["teen", "teenager", "student", "young skin"],
     text: "Yes, our soap is safe and gentle for teenage skin! 🌿 With Neem and Tea Tree helping manage typical teenage breakouts and Aloe Vera keeping skin calm, it's a great addition to a simple daily routine." },
   { keywords: ["contact", "support", "help", "customer service", "phone number", "email"],
-    text: "You can reach our team directly: 📱 WhatsApp: +92 304 9067897 · 📧 arwabotanicss@gmail.com · 📍 Faisalabad, Pakistan. We're happy to help with anything!" },
+    text: "You can reach our team directly: 📱 WhatsApp: +92 371 4537622 · 📧 arwabotanicss@gmail.com · 📍 Faisalabad, Pakistan. We're happy to help with anything!" },
   { keywords: ["scent", "fragrance", "smell", "perfume"],
     text: "Arwa Botaniqs has a light, natural botanical scent that comes purely from its plant-based ingredients — no synthetic perfumes or artificial fragrances added. 🌿 It's fresh and earthy, never overpowering." },
   { keywords: ["natural", "organic", "chemical free", "chemical-free", "toxin"],
@@ -70,7 +70,7 @@ const BOT_RESPONSES: { keywords: string[]; text: string }[] = [
     text: "Arwa Botaniqs Beauty Soap is formulated to suit **all skin types** — oily, dry, combination, and sensitive. 🌿 The natural ingredient blend adapts gently to your skin's needs without stripping or irritating it." },
 ];
  
-const DEFAULT = "Hmm, I'm not sure about that one yet! 🌿 I can help with ingredients, skin concerns, how to use the soap, pricing, delivery, payments, and more — try asking in a different way, or for anything specific, our team is happy to help directly on WhatsApp: +92 304 9067897.";
+const DEFAULT = "Hmm, I'm not sure about that one yet! 🌿 I can help with ingredients, skin concerns, how to use the soap, pricing, delivery, payments, and more — try asking in a different way, or for anything specific, our team is happy to help directly on WhatsApp: +92 371 4537622.";
  
 function getBotResponse(message: string): string {
   const lower = message.toLowerCase();
@@ -298,3 +298,4 @@ export default function AIAssistant() {
     </div>
   );
 }
+

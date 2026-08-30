@@ -609,9 +609,9 @@ function Footer() {
             </div>
           </div>
           <div>
-            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.68rem", letterSpacing: "0.3em", textTransform: "uppercase", color: C.gold, marginBottom: 16 }}>Shipping & Returns</p>
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.68rem", letterSpacing: "0.3em", textTransform: "uppercase", color: C.gold, marginBottom: 16 }}>Shipping</p>
             <div className="space-y-3 mb-5">
-              {[{ Icon: Truck, t: "Delivery 2–4 Days", s: "Flat Rs. 300" }, { Icon: RotateCcw, t: "2-Day Returns", s: "Hassle-free" }, { Icon: Shield, t: "Secure Payments", s: "100% encrypted" }].map(({ Icon, t, s }) => (
+              {[{ Icon: Truck, t: "Delivery 2–4 Days", s: "Flat Rs. 300" }, { Icon: Shield, t: "Secure Payments", s: "100% encrypted" }].map(({ Icon, t, s }) => (
                 <div key={t} className="flex items-start gap-3">
                   <Icon size={13} color={C.gold} style={{ flexShrink: 0, marginTop: 2 }} />
                   <div><p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.84rem", color: "rgba(245,240,232,0.65)" }}>{t}</p><p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "0.72rem", color: "rgba(245,240,232,0.35)" }}>{s}</p></div>
