@@ -12,6 +12,7 @@ import {
 } from "../api/payments";
 import { fetchProductStockBySlug } from "../api/products";
 import { validateCouponCode } from "../api/coupons";
+import { fetchShippingSettings } from "../api/shippingSettings";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { C, FadeIn, StarRating } from "../shared";
 import { ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Check, Truck, Shield, RotateCcw, Tag, Lock, Leaf, Sparkles, Banknote, CreditCard, Smartphone, UploadCloud, Copy } from "lucide-react";
@@ -22,7 +23,7 @@ const CITIES: Record<string, string[]> = {
   "Sindh": ["Karachi","Hyderabad","Sukkur","Larkana","Nawabshah","Mirpur Khas","Jacobabad","Shikarpur","Khairpur","Dadu","Tando Adam","Tando Allahyar","Badin","Thatta","Umerkot","Ghotki","Kashmore","Sanghar","Naushahro Feroze","Matiari"],
   "Khyber Pakhtunkhwa": ["Peshawar","Mardan","Mingora","Kohat","Abbottabad","Dera Ismail Khan","Bannu","Swabi","Nowshera","Charsadda","Mansehra","Haripur","Karak","Tank","Chitral","Buner","Batkhela","Timergara","Lakki Marwat","Hangu"]
 };
-const SHIPPING  = 300;
+
 
 
 type PayMethod = "cod" | "jazzcash" | "easypaisa" | "card";
@@ -640,6 +641,9 @@ export default function Checkout() {
     fullName: "", phone: "", email: "", province: "", city: "", address: "", postal: "", notes: "",
   });
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
+  const [shippingRate, setShippingRate] = useState(300);
+  useEffect(() => { fetchShippingSettings().then(s => setShippingRate(s.rate)).catch(() => {}); }, []);
+  const SHIPPING = shippingRate;
 
   const [stockIssues, setStockIssues] = useState<Record<string, number>>({}); // productId -> available qty
   const [paymentPending, setPaymentPending] = useState(false);
